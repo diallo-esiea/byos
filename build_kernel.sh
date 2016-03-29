@@ -1,22 +1,23 @@
 #!/bin/bash -xv
 
-AWK=/usr/bin/awk
 CAT=/bin/cat
 CHMOD=/bin/chmod
 CP=/bin/cp
-DPKG_DEB=/usr/bin/dpkg-deb
 ECHO=/bin/echo
-FAKEROOT=/usr/bin/fakeroot 
-GPG=/usr/bin/gpg
-MAKE=/usr/bin/make
 MKDIR=/bin/mkdir
-PATCH=/usr/bin/patch
 PRINTF=printf
 PWD=/bin/pwd
 RM=/bin/rm
 SED=/bin/sed
-UNXZ=/usr/bin/unxz
 TAR=/bin/tar
+
+AWK=/usr/bin/awk
+DPKG_DEB=/usr/bin/dpkg-deb
+FAKEROOT=/usr/bin/fakeroot 
+GPG=/usr/bin/gpg
+MAKE=/usr/bin/make
+PATCH=/usr/bin/patch
+UNXZ=/usr/bin/unxz
 WGET=/usr/bin/wget
 
 NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
@@ -28,7 +29,7 @@ USAGE="$(basename "$0") [{-h|--help}][{-n|--nodelete}] [{-t|--temp}=temporary-fo
 \t\t-g, --grsec\tGrsecurity patch.\n
 \t\t-h, --help\tDisplay this message.\n
 \t\t-n, --nodelete\tKeep temporary files.\n
-\t\t-p, --path\tPath to install kernel and kernel modules (default=current folder).\n
+\t\t-p, --path\tPath to install kernel and kernel modules (default=/).\n
 \t\t-t, --temp\tTemporary folder.\n
 \t\t-v, --version\tKernel version to build."
 
@@ -100,6 +101,10 @@ if [ -z "${CONF_FILE}" ]; then
   exit 1
 fi
 
+if [ -z "${DEST_PATH}" ]; then
+  DEST_PATH=/
+fi
+
 if [ -z "${KERNEL_VERSION}" ]; then
   ${ECHO} "None kernel version" >&2
   exit 1
@@ -152,6 +157,7 @@ ${TAR} -xf linux-${KERNEL_VERSION}.tar -C ${TMP_PATH}
 ${CP} ${CONF_FILE} linux-${KERNEL_VERSION}/.config
 
 pushd ${TMP_PATH}/linux-${KERNEL_VERSION} || exit 1
+
 # Configuring kernel
 if [ -n "${ALT}" ]; then
   ${MAKE} ${ALT}
@@ -168,24 +174,18 @@ if [ -n "${GRSEC_PATCH}" ]; then
   ${MAKE}
 fi
 
-###################################
-if [ -z "${DEST_PATH}" ]; then
-    DEST_PATH=$(${PWD})
-fi
-
 # Define install folder
 if [ -n "${DEB}" ]; then
-    INSTALL_PATH=${TMP_PATH}/kernel-${KERNEL_VERSION}
+  INSTALL_PATH=${TMP_PATH}/kernel-${KERNEL_VERSION}
 else
-    INSTALL_PATH=${DEST_PATH}
+  INSTALL_PATH=${DEST_PATH}
 fi
-###################################
 
 # Build and install kernel
 ${MKDIR} -p ${INSTALL_PATH}/boot
 ${MAKE} --jobs=$((NB_CORES+1)) --load-average=${NB_CORES}
 ${MAKE} INSTALL_PATH=${INSTALL_PATH}/boot install
-exit 0
+
 # Build and install kernel modules
 ${MAKE} --jobs=$((NB_CORES+1)) --load-average=${NB_CORES} modules
 ${MAKE} INSTALL_MOD_PATH=${INSTALL_PATH} modules_install
@@ -197,9 +197,9 @@ popd
 
 # Create Debian package 
 if [ -n "${DEB}" ]; then
-    ${MKDIR} -p kernel-${KERNEL_VERSION}/DEBIAN
+  ${MKDIR} -p kernel-${KERNEL_VERSION}/DEBIAN
     
-    ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/control << EOF
+  ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/control << EOF
 Package: kernel
 Version: ${KERNEL_VERSION}
 Section: kernel
@@ -213,31 +213,31 @@ Description: Linux kernel, version ${KERNEL_VERSION}
   files, version: ${KERNEL_VERSION}
 EOF
     
-    ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/postinst << EOF
+  ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/postinst << EOF
 rm -f /boot/initrd.img-${KERNEL_VERSION}
 update-initramfs -c -k ${KERNEL_VERSION}
 EOF
     
-    ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/postrm << EOF
+  ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/postrm << EOF
 rm -f /boot/initrd.img-${KERNEL_VERSION}
 EOF
    
-    ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/triggers << EOF
+  ${CAT} > kernel-${KERNEL_VERSION}/DEBIAN/triggers << EOF
 interest update-initramfs
 EOF
     
-    ${CHMOD} 755 kernel-${KERNEL_VERSION}/DEBIAN/postinst kernel-${KERNEL_VERSION}/DEBIAN/postrm
+  ${CHMOD} 755 kernel-${KERNEL_VERSION}/DEBIAN/postinst kernel-${KERNEL_VERSION}/DEBIAN/postrm
     
-    ${FAKEROOT} ${DPKG_DEB} --build kernel-${KERNEL_VERSION}
+  ${FAKEROOT} ${DPKG_DEB} --build kernel-${KERNEL_VERSION}
     
-    # Copy Debian package 
-    ${CP} kernel-${KERNEL_VERSION}.deb ${DEST_PATH}
+  # Copy Debian package 
+  ${CP} kernel-${KERNEL_VERSION}.deb ${DEST_PATH}
 
-    # Delete Debian package and install folder
-    if [ -z "${NO_DELETE}" ]; then
-        ${RM} kernel-${KERNEL_VERSION}.deb
-        ${RM} -rf kernel-${KERNEL_VERSION}
-    fi
+  # Delete Debian package and install folder
+  if [ -z "${NO_DELETE}" ]; then
+    ${RM} kernel-${KERNEL_VERSION}.deb
+    ${RM} -rf kernel-${KERNEL_VERSION}
+  fi
 fi
 
 # Delete temporary files
