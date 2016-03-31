@@ -1,8 +1,21 @@
 --------------------------------------------------------------------
-Issue 1: Problème de path pour les options. Actuellement, il faut écrire le path complet pour au moins le fichier de configuration et le répertoire d'install.
+Issue 1: Problème de path pour les options. 
+Actuellement, il faut écrire le path complet pour au moins le fichier de configuration et le répertoire d'install.
 Solution 1: Détecter s'il n'y a pas de / ou de ./ devant la config et l'install et ajouter le pwd
 --------------------------------------------------------------------
 Issue 2: Problème si gcc plugin non installé
-Your gcc installation does not support plugins.  If the necessary headers for plugin support are missing, they should be installed.  On Debian, apt-get install gcc-<ver>-plugin-dev.  If you choose to ignore this error and lessen the improvements provided by this patch, re-run make with the DISABLE_PAX_PLUGINS=y argument..
+Your gcc installation does not support plugins.  
+If the necessary headers for plugin support are missing, they should be installed.  
+On Debian, apt-get install gcc-<ver>-plugin-dev.  
+If you choose to ignore this error and lessen the improvements provided by this patch, re-run make with the DISABLE_PAX_PLUGINS=y argument..
+--------------------------------------------------------------------
+Issue 3: Problème lors du dpkg -i
+update-initramfs: Generating /boot/initrd.img-4.3.5
+W: Possible missing firmware /lib/firmware/rtl_nic/rtl8107e-2.fw for module r8169
+W: Possible missing firmware /lib/firmware/rtl_nic/rtl8107e-1.fw for module r8169
+W: Possible missing firmware /lib/firmware/rtl_nic/rtl8168h-2.fw for module r8169
+W: Possible missing firmware /lib/firmware/rtl_nic/rtl8168h-1.fw for module r8169
+--------------------------------------------------------------------
+Issue 4: Problème lors de la génération sur un support amovible type USB
 --------------------------------------------------------------------
 

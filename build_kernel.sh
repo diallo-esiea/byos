@@ -22,8 +22,8 @@ WGET=/usr/bin/wget
 
 NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
 
-USAGE="$(basename "$0") [{-h|--help}][{-n|--nodelete}] [{-t|--temp}=temporary-folder] {-c|--conf}=configuration-file [{-a|--alt}={alldefconfig|allnoconfig|config|defconfig|menuconfig}] {-v|--version}=kernel-version [{-p|--path}=install-path]\n
-\t\t-a, --alt\tAlternative Configuration (config, menuconfig, defconf, alldefconfig, allnoconfig,...).\n
+USAGE="$(basename "$0") [{-h|--help}][{-n|--nodelete}] [{-t|--temp}=temporary-folder] {-c|--conf}=configuration-file [{-a|--alt}={alldefconfig|allnoconfig|config|oldconfig|defconfig|menuconfig}] {-v|--version}=kernel-version [{-p|--path}=install-path]\n
+\t\t-a, --alt\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...).\n
 \t\t-c, --conf\tConfiguration file.\n
 \t\t-d, --deb\tCreate Debian package archive.\n
 \t\t-g, --grsec\tGrsecurity patch.\n
@@ -39,7 +39,7 @@ for i in "$@"; do
     j="${i#*=}"
     shift
       case $j in
-        alldefconfig|allnoconfig|config|defconfig|menuconfig)
+        alldefconfig|allnoconfig|config|defconfig|menuconfig|oldconfig)
         ALT=${j}
         ;;
 
