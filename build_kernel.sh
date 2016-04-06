@@ -75,6 +75,9 @@ for i in "$@"; do
 
     -p=*|--path=*)
     DEST_PATH="${i#*=}"
+
+    # Create DEST_PATH if not exists 
+    ${MKDIR} -p ${DEST_PATH}
     shift
     ;;
 
@@ -122,12 +125,12 @@ fi
 pushd ${TMP_PATH} || exit 1
 
 # kernel.org branch url and target files
-KERNEL_SIGN=linux-${KERNEL_VERSION}.tar.sign
-KERNEL_TAR=linux-${KERNEL_VERSION}.tar.xz
+KERNEL_NAME=linux-${KERNEL_VERSION}
+KERNEL_TAR=${KERNEL_NAME}.tar
 KERNEL_URL=https://www.kernel.org/pub/linux/kernel/v${KERNEL_VERSION/%.*/.x}
 
 # Check if BOTH kernel version AND signature file exist
-${WGET} -c --spider ${KERNEL_URL}/linux-${KERNEL_VERSION}.tar.{sign,xz}
+${WGET} -c --spider ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
 
 if [ $? -ne 0 ]; then
   ${ECHO} "Kernel version does not exist" >&2
@@ -135,28 +138,28 @@ if [ $? -ne 0 ]; then
 fi
 
 # Download kernel AND signature
-${WGET} -c ${KERNEL_URL}/linux-${KERNEL_VERSION}.tar.{sign,xz}
+${WGET} -c ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
 
 # Initialize GPG keyrings
 ${PRINTF} "" | ${GPG}
 
 # Uncompressing kernel archive
-${UNXZ} ${KERNEL_TAR}
+${UNXZ} ${KERNEL_TAR}.xz
 
 # Download GPG keys
-GPG_KEY=`${GPG} --verify ${KERNEL_SIGN} 2>&1 | ${AWK} '{print $NF}' | ${SED} -n '/[0-9]$/p' | ${SED} -n '1p'`
+GPG_KEY=`${GPG} --verify ${KERNEL_TAR}.sign 2>&1 | ${AWK} '{print $NF}' | ${SED} -n '/[0-9]$/p' | ${SED} -n '1p'`
 ${GPG} --recv-keys ${GPG_KEY}
 
 # Verify kernel archive against signature file
-${GPG} --verify ${KERNEL_SIGN}
+${GPG} --verify ${KERNEL_TAR}.sign
 
 # Decompress kernel archive
-${TAR} -xf linux-${KERNEL_VERSION}.tar -C ${TMP_PATH}
+${TAR} -xf ${KERNEL_TAR} -C ${TMP_PATH}
 
 # Copy config file
-${CP} ${CONF_FILE} linux-${KERNEL_VERSION}/.config
+${CP} ${CONF_FILE} ${KERNEL_NAME}/.config
 
-pushd ${TMP_PATH}/linux-${KERNEL_VERSION} || exit 1
+pushd ${TMP_PATH}/${KERNEL_NAME} || exit 1
 
 # Configuring kernel
 if [ -n "${ALT}" ]; then
@@ -172,6 +175,9 @@ if [ -n "${GRSEC_PATCH}" ]; then
   # Grsecurity configuration options 
   # cf. https://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options
   ${MAKE}
+
+  # Update KERNEL_VERSION 
+  KERNEL_VERSION=${KERNEL_VERSION}-grsec
 fi
 
 # Define install folder
@@ -243,9 +249,9 @@ fi
 # Delete temporary files
 if [ -z "${NO_DELETE}" ]; then
   # Delete kernel archive and decompressed kernel archive
-  ${RM} linux-${KERNEL_VERSION}.tar
-  ${RM} linux-${KERNEL_VERSION}.tar.sign
-  ${RM} -rf linux-${KERNEL_VERSION}
+  ${RM} ${KERNEL_TAR}
+  ${RM} ${KERNEL_TAR}.sign
+  ${RM} -rf ${KERNEL_NAME}
 fi
 
 popd

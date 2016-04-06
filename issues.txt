@@ -3,7 +3,7 @@ Issue 1: Problème de path pour les options.
 Actuellement, il faut écrire le path complet pour au moins le fichier de configuration et le répertoire d'install.
 Solution 1: Détecter s'il n'y a pas de / ou de ./ devant la config et l'install et ajouter le pwd
 --------------------------------------------------------------------
-Issue 2: Problème si gcc plugin non installé
+Issue 2: Problème si gcc plugin non installé lors de la compilation avec grsec
 Your gcc installation does not support plugins.  
 If the necessary headers for plugin support are missing, they should be installed.  
 On Debian, apt-get install gcc-<ver>-plugin-dev.  
@@ -17,5 +17,7 @@ W: Possible missing firmware /lib/firmware/rtl_nic/rtl8168h-2.fw for module r816
 W: Possible missing firmware /lib/firmware/rtl_nic/rtl8168h-1.fw for module r8169
 --------------------------------------------------------------------
 Issue 4: Problème lors de la génération sur un support amovible type USB
+--------------------------------------------------------------------
+Feature 1: Vérifier la disponibilité des paquets nécessaires à l'éxécution du script
 --------------------------------------------------------------------
 
