@@ -52,6 +52,11 @@ for i in "$@"; do
 
     -c=*|--conf=*)
     CONF_FILE="${i#*=}"
+
+    # Convert relative path to absolute path
+    if [[ ${CONF_FILE} != /* ]]; then
+      CONF_FILE=`${PWD}`/${CONF_FILE}
+    fi
     shift
     ;;
 
@@ -61,6 +66,11 @@ for i in "$@"; do
 
     -g=*|--grsec=*)
     GRSEC_PATCH="${i#*=}"
+
+    # Convert relative path to absolute path
+    if [[ ${GRSEC_PATCH} != /* ]]; then
+      GRSEC_PATCH=`${PWD}`/${GRSEC_PATCH}
+    fi
     shift
     ;;
 
@@ -76,6 +86,11 @@ for i in "$@"; do
     -p=*|--path=*)
     DEST_PATH="${i#*=}"
 
+    # Convert relative path to absolute path
+    if [[ ${DEST_PATH} != /* ]]; then
+      DEST_PATH=`${PWD}`/${DEST_PATH}
+    fi
+
     # Create DEST_PATH if not exists 
     ${MKDIR} -p ${DEST_PATH}
     shift
@@ -83,6 +98,11 @@ for i in "$@"; do
 
     -t=*|--temp=*)
     TMP_PATH="${i#*=}"
+
+    # Convert relative path to absolute path
+    if [[ ${DEST_PATH} != /* ]]; then
+      TMP_PATH=`${PWD}`/${TMP_PATH}
+    fi
     shift
     ;;
 
@@ -104,13 +124,13 @@ if [ -z "${CONF_FILE}" ]; then
   exit 1
 fi
 
-if [ -z "${DEST_PATH}" ]; then
-  DEST_PATH=/
-fi
-
 if [ -z "${KERNEL_VERSION}" ]; then
   ${ECHO} "None kernel version" >&2
   exit 1
+fi
+
+if [ -z "${DEST_PATH}" ]; then
+  DEST_PATH=/
 fi
 
 if [ -z "${TMP_PATH}" ]; then

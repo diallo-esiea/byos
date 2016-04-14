@@ -1,8 +1,3 @@
---------------------------------------------------------------------
-Issue 1: Problème de path pour les options. 
-Actuellement, il faut écrire le path complet pour au moins le fichier de configuration et le répertoire d'install.
-Solution 1: Détecter s'il n'y a pas de / ou de ./ devant la config et l'install et ajouter le pwd
---------------------------------------------------------------------
 Issue 2: Problème si gcc plugin non installé lors de la compilation avec grsec
 Your gcc installation does not support plugins.  
 If the necessary headers for plugin support are missing, they should be installed.  
