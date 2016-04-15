@@ -22,12 +22,13 @@ WGET=/usr/bin/wget
 
 NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
 
-USAGE="$(basename "$0") [{-h|--help}][{-n|--nodelete}] [{-t|--temp}=temporary-folder] {-c|--conf}=configuration-file [{-a|--alt}={alldefconfig|allnoconfig|config|oldconfig|defconfig|menuconfig}] {-v|--version}=kernel-version [{-p|--path}=install-path]\n
+USAGE="$(basename "$0") [{-h|--help}][{-n|--nodelete}] [{-t|--temp}=temporary-folder] {-c|--conf}=configuration-file [{-a|--alt}={alldefconfig|allnoconfig|config|oldconfig|defconfig|menuconfig}] {-v|--version}=kernel-version [{-l|--local}=local-path] [[{-p|--path}=install-path]\n
 \t\t-a, --alt\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...).\n
 \t\t-c, --conf\tConfiguration file.\n
 \t\t-d, --deb\tCreate Debian package archive.\n
 \t\t-g, --grsec\tGrsecurity patch.\n
 \t\t-h, --help\tDisplay this message.\n
+\t\t-l, --local\tPath to get the kernel archive (default is official Linux Kernel Archives URL).\n
 \t\t-n, --nodelete\tKeep temporary files.\n
 \t\t-p, --path\tPath to install kernel and kernel modules (default=/).\n
 \t\t-t, --temp\tTemporary folder.\n
@@ -36,85 +37,95 @@ USAGE="$(basename "$0") [{-h|--help}][{-n|--nodelete}] [{-t|--temp}=temporary-fo
 for i in "$@"; do
   case $i in
     -a==*|--alt=*)
-    j="${i#*=}"
-    shift
-      case $j in
-        alldefconfig|allnoconfig|config|defconfig|menuconfig|oldconfig)
-        ALT=${j}
-        ;;
-
-        *)    # unknown alternative configuration
-        ${ECHO} -e ${USAGE}
-        exit 1
-        ;;
-      esac
-    ;;
+      j="${i#*=}"
+      shift
+        case $j in
+          alldefconfig|allnoconfig|config|defconfig|menuconfig|oldconfig)
+            ALT=${j}
+            ;;
+  
+          *)    # unknown alternative configuration
+            ${ECHO} -e ${USAGE}
+            exit 1
+            ;;
+        esac
+      ;;
 
     -c=*|--conf=*)
-    CONF_FILE="${i#*=}"
+      CONF_FILE="${i#*=}"
 
-    # Convert relative path to absolute path
-    if [[ ${CONF_FILE} != /* ]]; then
-      CONF_FILE=`${PWD}`/${CONF_FILE}
-    fi
-    shift
-    ;;
+      # Convert relative path to absolute path
+      if [[ ${CONF_FILE} != /* ]]; then
+        CONF_FILE=`${PWD}`/${CONF_FILE}
+      fi
+      shift
+      ;;
 
     -d|--deb)
-    DEB=1
-    ;;
+      DEB=1
+      ;;
 
     -g=*|--grsec=*)
-    GRSEC_PATCH="${i#*=}"
+      GRSEC_PATCH="${i#*=}"
 
-    # Convert relative path to absolute path
-    if [[ ${GRSEC_PATCH} != /* ]]; then
-      GRSEC_PATCH=`${PWD}`/${GRSEC_PATCH}
-    fi
-    shift
-    ;;
+      # Convert relative path to absolute path
+      if [[ ${GRSEC_PATCH} != /* ]]; then
+        GRSEC_PATCH=`${PWD}`/${GRSEC_PATCH}
+      fi
+      shift
+      ;;
 
     -h|--help)
-    ${ECHO} -e ${USAGE}
-    exit 0
-    ;;
+      ${ECHO} -e ${USAGE}
+      exit 0
+      ;;
+
+    -l=*|--local=*)
+      KERNEL_PATH="${i#*=}"
+
+      # Convert relative path to absolute path
+      if [[ ${KERNEL_PATH} != /* ]]; then
+        KERNEL_PATH=`${PWD}`/${KERNEL_PATH}
+      fi
+      shift
+      ;;
 
     -n|--nodelete)
-    NO_DELETE=1
-    ;;
+      NO_DELETE=1
+      ;;
 
     -p=*|--path=*)
-    DEST_PATH="${i#*=}"
+      DEST_PATH="${i#*=}"
 
-    # Convert relative path to absolute path
-    if [[ ${DEST_PATH} != /* ]]; then
-      DEST_PATH=`${PWD}`/${DEST_PATH}
-    fi
+      # Convert relative path to absolute path
+      if [[ ${DEST_PATH} != /* ]]; then
+        DEST_PATH=`${PWD}`/${DEST_PATH}
+      fi
 
-    # Create DEST_PATH if not exists 
-    ${MKDIR} -p ${DEST_PATH}
-    shift
-    ;;
+      # Create DEST_PATH if not exists 
+      ${MKDIR} -p ${DEST_PATH}
+      shift
+      ;;
 
     -t=*|--temp=*)
-    TMP_PATH="${i#*=}"
+      TMP_PATH="${i#*=}"
 
-    # Convert relative path to absolute path
-    if [[ ${DEST_PATH} != /* ]]; then
-      TMP_PATH=`${PWD}`/${TMP_PATH}
-    fi
-    shift
-    ;;
+      # Convert relative path to absolute path
+      if [[ ${DEST_PATH} != /* ]]; then
+        TMP_PATH=`${PWD}`/${TMP_PATH}
+      fi
+      shift
+      ;;
 
     -v=*|--version=*)
-    KERNEL_VERSION="${i#*=}"
-    shift
-    ;;
+      KERNEL_VERSION="${i#*=}"
+      shift
+      ;;
   
     *)    # unknown option
-    ${ECHO} -e ${USAGE}
-    exit 1
-    ;;
+      ${ECHO} -e ${USAGE}
+      exit 1
+      ;;
   
   esac
 done
@@ -147,18 +158,31 @@ pushd ${TMP_PATH} || exit 1
 # kernel.org branch url and target files
 KERNEL_NAME=linux-${KERNEL_VERSION}
 KERNEL_TAR=${KERNEL_NAME}.tar
-KERNEL_URL=https://www.kernel.org/pub/linux/kernel/v${KERNEL_VERSION/%.*/.x}
 
-# Check if BOTH kernel version AND signature file exist
-${WGET} -c --spider ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
+# Kernel archive and signature
+if [ -z "${KERNEL_PATH}" ]; then
+  KERNEL_URL=https://www.kernel.org/pub/linux/kernel/v${KERNEL_VERSION/%.*/.x}
+  
+  # Check if BOTH kernel version AND signature file exist
+  ${WGET} -c --spider ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
+  
+  if [ $? -ne 0 ]; then
+    ${ECHO} "Kernel version does not exist" >&2
+    exit 1
+  fi
+  
+  # Download kernel AND signature
+  ${WGET} -c ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
+else
+  # Check if BOTH kernel version AND signature file exist
+  if [ ! -f ${KERNEL_PATH}/${KERNEL_TAR}.{sign,xz} ]; then
+    ${ECHO} "Kernel version does not exist" >&2
+    exit 1
+  fi
 
-if [ $? -ne 0 ]; then
-  ${ECHO} "Kernel version does not exist" >&2
-  exit 1
+  # Copy kernel AND signature
+  ${CP} ${KERNEL_PATH}/${KERNEL_TAR}.{sign,xz} .
 fi
-
-# Download kernel AND signature
-${WGET} -c ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
 
 # Initialize GPG keyrings
 ${PRINTF} "" | ${GPG}
