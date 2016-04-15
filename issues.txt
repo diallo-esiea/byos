@@ -15,4 +15,6 @@ Issue 4: Problème lors de la génération sur un support amovible type USB
 --------------------------------------------------------------------
 Feature 1: Vérifier la disponibilité des paquets nécessaires à l'éxécution du script
 --------------------------------------------------------------------
+Feature 2: Rediriger les messages (erreurs, informations,etc.) dans un ou plusieurs fichiers en fonction de l'étape
+--------------------------------------------------------------------
 

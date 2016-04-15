@@ -4,6 +4,7 @@ CAT=/bin/cat
 CHMOD=/bin/chmod
 CP=/bin/cp
 ECHO=/bin/echo
+LN=/bin/ln
 MKDIR=/bin/mkdir
 PRINTF=printf
 PWD=/bin/pwd
@@ -155,7 +156,7 @@ if [ -z "${TMP_PATH}" ]; then
   fi
 fi
 
-pushd ${TMP_PATH} || exit 1
+pushd ${TMP_PATH} > /dev/null || exit 1
 
 # kernel.org branch url and target files
 KERNEL_NAME=linux-${KERNEL_VERSION}
@@ -177,7 +178,7 @@ if [ -z "${KERNEL_PATH}" ]; then
   ${WGET} -c ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
 else
   # Check if BOTH kernel version AND signature file exist
-  if [ ! -f ${KERNEL_PATH}/${KERNEL_TAR}.{sign,xz} ]; then
+  if [ ! -f ${KERNEL_PATH}/${KERNEL_TAR}.xz ] || [ ! -f ${KERNEL_PATH}/${KERNEL_TAR}.sign ]; then
     ${ECHO} "Kernel version does not exist" >&2
     exit 1
   fi
@@ -205,7 +206,7 @@ ${TAR} -xf ${KERNEL_TAR} -C ${TMP_PATH}
 # Copy config file
 ${CP} ${CONF_FILE} ${KERNEL_NAME}/.config
 
-pushd ${TMP_PATH}/${KERNEL_NAME} || exit 1
+pushd ${TMP_PATH}/${KERNEL_NAME} > /dev/null || exit 1
 
 # Configuring kernel
 if [ -n "${ALT}" ]; then
@@ -245,7 +246,13 @@ ${MAKE} INSTALL_MOD_PATH=${INSTALL_PATH} modules_install
 # Install firmware
 ${MAKE} INSTALL_MOD_PATH=${INSTALL_PATH} firmware_install
 
-popd
+popd > /dev/null
+
+# Replace symbolic link
+${RM} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/build
+${RM} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/source
+${LN} -sf /usr/src/${KERNEL_NAME} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/build
+${LN} -sf /usr/src/${KERNEL_NAME} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/source
 
 # Create Debian package 
 if [ -n "${DEB}" ]; then
@@ -300,6 +307,6 @@ if [ -z "${NO_DELETE}" ]; then
   ${RM} -rf ${KERNEL_NAME}
 fi
 
-popd
+popd > /dev/null
 
 exit 0
