@@ -1,4 +1,4 @@
-#!/bin/bash -xv
+#!/bin/bash
 
 CAT=/bin/cat
 CHMOD=/bin/chmod
@@ -22,17 +22,19 @@ WGET=/usr/bin/wget
 
 NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
 
-USAGE="$(basename "$0") [{-h|--help}][{-n|--nodelete}] [{-t|--temp}=temporary-folder] {-c|--conf}=configuration-file [{-a|--alt}={alldefconfig|allnoconfig|config|oldconfig|defconfig|menuconfig}] {-v|--version}=kernel-version [{-l|--local}=local-path] [[{-p|--path}=install-path]\n
-\t\t-a, --alt\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...).\n
-\t\t-c, --conf\tConfiguration file.\n
-\t\t-d, --deb\tCreate Debian package archive.\n
-\t\t-g, --grsec\tGrsecurity patch.\n
-\t\t-h, --help\tDisplay this message.\n
-\t\t-l, --local\tPath to get the kernel archive (default is official Linux Kernel Archives URL).\n
-\t\t-n, --nodelete\tKeep temporary files.\n
-\t\t-p, --path\tPath to install kernel and kernel modules (default=/).\n
-\t\t-t, --temp\tTemporary folder.\n
-\t\t-v, --version\tKernel version to build."
+USAGE="$(basename "$0") [options] {-c|--conf}=configuration-file {-v|--version}=kernel-version\n\n
+\t\t-c, --conf\tConfiguration file\n
+\t\t-v, --version\tKernel version to build\n\n
+\toptions:\n
+\t--------\n
+\t\t-a, --alt\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...)\n
+\t\t-d, --deb\tCreate Debian package archive\n
+\t\t-g, --grsec\tGrsecurity patch\n
+\t\t-h, --help\tDisplay this message\n
+\t\t-l, --local\tPath to get the kernel archive (instead of official Linux Kernel Archives URL)\n
+\t\t-n, --nodelete\tKeep temporary files\n
+\t\t-p, --path\tPath to install kernel and kernel modules (default=/boot and /lib)\n
+\t\t-t, --temp\tTemporary folder"
 
 for i in "$@"; do
   case $i in
