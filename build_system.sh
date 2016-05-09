@@ -47,7 +47,6 @@ for i in "$@"; do
       ${ECHO} -e ${USAGE}
       exit 0
       ;;
-
   esac
 done
 
@@ -109,18 +108,18 @@ ${CAT} > ${TARGET}/etc/fstab << EOF
 # device; this may be used with UUID= as a more robust way to name devices
 # that works even if disks are added and removed. See fstab(5).
 #
-# <file system>     <mount point>   <type>  <options>         <dump>  <pass>
-/dev/root           /               ${TYPE} noatime,errors=remount-ro 0 1
-proc                /proc           proc    defaults          0       0
-/dev/${VGNAME}/boot /boot           ${TYPE} defaults,noatime  1       2
-/dev/${VGNAME}/home /home           ${TYPE} defaults,noatime  1       2
-tmpfs               /tmp            tmpfs   defaults          0       0
-/dev/${VGNAME}/srv  /srv            ${TYPE} defaults,noatime  1       2
-sysfs               /sys            sysfs   defaults          0       0
-#cgroup             /sys/fs/cgroup  cgroup  defaults          0       0
-/dev/${VGNAME}/swap none            swap    swap              0       0
-/dev/${VGNAME}/var  /var            ${TYPE} defaults,noatime  1       2
-/dev/${VGNAME}/log  /var/log        ${TYPE} defaults,noatime  1       2
+# <file system>     <mount point>   <type>  <options>                 <dump>  <pass>
+/dev/root           /               ${TYPE} noatime,errors=remount-ro   0       1
+/dev/${VGNAME}/boot /boot           ${TYPE} defaults,noatime            1       2
+/dev/${VGNAME}/home /home           ${TYPE} defaults,noatime            1       2
+/dev/${VGNAME}/log  /var/log        ${TYPE} defaults,noatime            1       2
+/dev/${VGNAME}/swap none            swap    swap                        0       0
+/dev/${VGNAME}/srv  /srv            ${TYPE} defaults,noatime            1       2
+/dev/${VGNAME}/var  /var            ${TYPE} defaults,noatime            1       2
+#cgroup             /sys/fs/cgroup  cgroup  defaults                    0       0
+proc                /proc           proc    defaults                    0       0
+sysfs               /sys            sysfs   defaults                    0       0
+tmpfs               /tmp            tmpfs   defaults                    0       0
 EOF
 
 # Entering the chroot environment
