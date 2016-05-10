@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -xv
 
 CAT=/bin/cat
 CHMOD=/bin/chmod
@@ -200,7 +200,7 @@ ${PRINTF} "" | ${GPG}
 ${UNXZ} ${KERNEL_TAR}.xz
 
 # Download GPG keys
-GPG_KEY=`${GPG} --verify ${KERNEL_TAR}.sign 2>&1 | ${AWK} '{print $NF}' | ${SED} -n '/[0-9]$/p' | ${SED} -n '1p'`
+GPG_KEY=`${GPG} --verify ${KERNEL_TAR}.sign 2>&1 | ${AWK} '{print $NF}' | ${SED} -n '/\([0-9]\|[A-H]\)$/p' | ${SED} -n '1p'`
 ${GPG} --recv-keys ${GPG_KEY}
 
 # Verify kernel archive against signature file
