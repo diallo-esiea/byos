@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 CAT=/bin/cat
 CHMOD=/bin/chmod
@@ -24,12 +24,15 @@ WGET=/usr/bin/wget
 NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
 
 USAGE="$(basename "$0") [options] {-c|--conf}=configuration-file {-v|--version}=kernel-version\n\n
-\t\t-c, --conf\tConfiguration file\n
+\tparameters:\n
+\t-----------\n
+\t\t-c, --conf\tKernel configuration file\n
 \t\t-v, --version\tKernel version to build\n\n
 \toptions:\n
 \t--------\n
 \t\t-a, --alt\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...)\n
 \t\t-d, --deb\tCreate Debian package archive\n
+\t\t-f, --file\tConfiguration file\n
 \t\t-g, --grsec\tGrsecurity patch\n
 \t\t-h, --help\tDisplay this message\n
 \t\t-l, --local\tPath to get the kernel archive (instead of official Linux Kernel Archives URL)\n
@@ -56,11 +59,6 @@ for i in "$@"; do
 
     -c=*|--conf=*)
       CONF_FILE="${i#*=}"
-
-      # Convert relative path to absolute path
-      if [[ ${CONF_FILE} != /* ]]; then
-        CONF_FILE=`${PWD}`/${CONF_FILE}
-      fi
       shift
       ;;
 
@@ -68,13 +66,27 @@ for i in "$@"; do
       DEB=1
       ;;
 
+    -f=*|--file=*)
+      # Convert relative path to absolute path
+      if [[ ${i#*=} != /* ]]; then
+        FILE=`${PWD}`/${i#*=}
+      else
+        FILE="${i#*=}"
+      fi
+
+      if [ ! -f ${FILE} ]; then
+        ${ECHO} "File $FILE does not exists"
+        exit 1
+      fi
+
+      # Parse configuration file
+      source ${FILE}
+
+      break
+      ;;
+
     -g=*|--grsec=*)
       GRSEC_PATCH="${i#*=}"
-
-      # Convert relative path to absolute path
-      if [[ ${GRSEC_PATCH} != /* ]]; then
-        GRSEC_PATCH=`${PWD}`/${GRSEC_PATCH}
-      fi
       shift
       ;;
 
@@ -85,11 +97,6 @@ for i in "$@"; do
 
     -l=*|--local=*)
       KERNEL_PATH="${i#*=}"
-
-      # Convert relative path to absolute path
-      if [[ ${KERNEL_PATH} != /* ]]; then
-        KERNEL_PATH=`${PWD}`/${KERNEL_PATH}
-      fi
       shift
       ;;
 
@@ -99,24 +106,11 @@ for i in "$@"; do
 
     -p=*|--path=*)
       DEST_PATH="${i#*=}"
-
-      # Convert relative path to absolute path
-      if [[ ${DEST_PATH} != /* ]]; then
-        DEST_PATH=`${PWD}`/${DEST_PATH}
-      fi
-
-      # Create DEST_PATH if not exists 
-      ${MKDIR} -p ${DEST_PATH}
       shift
       ;;
 
     -t=*|--temp=*)
       TMP_PATH="${i#*=}"
-
-      # Convert relative path to absolute path
-      if [[ ${DEST_PATH} != /* ]]; then
-        TMP_PATH=`${PWD}`/${TMP_PATH}
-      fi
       shift
       ;;
 
@@ -133,6 +127,14 @@ for i in "$@"; do
   esac
 done
 
+# Convert relative path to absolute path
+for i in CONF_FILE DEST_PATH GRSEC_PATCH KERNEL_PATH TMP_PATH; do 
+  if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
+    eval $i=`${PWD}`/${!i}
+  fi
+done
+
+# Check parameters
 if [ -z "${CONF_FILE}" ]; then
   ${ECHO} "None configuration file" >&2
   exit 1
@@ -143,8 +145,12 @@ if [ -z "${KERNEL_VERSION}" ]; then
   exit 1
 fi
 
+# Assign default value in case of no option
 if [ -z "${DEST_PATH}" ]; then
   DEST_PATH=/
+else
+  # Create DEST_PATH if not exists 
+  ${MKDIR} -p ${DEST_PATH}
 fi
 
 if [ -z "${TMP_PATH}" ]; then
