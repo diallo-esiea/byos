@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 CAT=/bin/cat
 CHMOD=/bin/chmod
@@ -214,11 +214,6 @@ ${CP} ${CONF_FILE} ${KERNEL_NAME}/.config
 
 pushd ${TMP_PATH}/${KERNEL_NAME} > /dev/null || exit 1
 
-# Configuring kernel
-if [ -n "${ALT}" ]; then
-  ${MAKE} ${ALT}
-fi
-
 # Patching kernel with grsecurity
 if [ -n "${GRSEC_PATCH}" ]; then
 
@@ -227,10 +222,13 @@ if [ -n "${GRSEC_PATCH}" ]; then
   # Configuring kernel with Grsecurity
   # Grsecurity configuration options 
   # cf. https://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options
-  ${MAKE}
+  ${MAKE} ${ALT}
 
   # Update KERNEL_VERSION 
   KERNEL_VERSION=${KERNEL_VERSION}-grsec
+elif [ -n "${ALT}" ]; then
+  # Configuring kernel
+  ${MAKE} ${ALT}
 fi
 
 # Define install folder
