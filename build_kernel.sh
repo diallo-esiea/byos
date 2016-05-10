@@ -1,4 +1,4 @@
-#!/bin/bash -xv
+#!/bin/bash
 
 CAT=/bin/cat
 CHMOD=/bin/chmod
