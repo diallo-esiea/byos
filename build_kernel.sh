@@ -23,10 +23,10 @@ WGET=/usr/bin/wget
 
 NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
 
-USAGE="$(basename "$0") [options] {-c|--conf}=configuration-file {-v|--version}=kernel-version\n\n
+USAGE="$(basename "$0") [options] {-c|--conf}=config-file {-v|--version}=kernel-version\n\n
 \tparameters:\n
 \t-----------\n
-\t\t-c, --conf\tKernel configuration file\n
+\t\t-c, --conf\tLinux kernel config file\n
 \t\t-v, --version\tKernel version to build\n\n
 \toptions:\n
 \t--------\n
@@ -127,16 +127,9 @@ for i in "$@"; do
   esac
 done
 
-# Convert relative path to absolute path
-for i in CONF_FILE DEST_PATH GRSEC_PATCH KERNEL_PATH TMP_PATH; do 
-  if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
-    eval $i=`${PWD}`/${!i}
-  fi
-done
-
 # Check parameters
 if [ -z "${CONF_FILE}" ]; then
-  ${ECHO} "None configuration file" >&2
+  ${ECHO} "None Linux kernel config file" >&2
   exit 1
 fi
 
@@ -144,6 +137,13 @@ if [ -z "${KERNEL_VERSION}" ]; then
   ${ECHO} "None kernel version" >&2
   exit 1
 fi
+
+# Convert relative path to absolute path
+for i in CONF_FILE DEST_PATH GRSEC_PATCH KERNEL_PATH TMP_PATH; do 
+  if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
+    eval $i=`${PWD}`/${!i}
+  fi
+done
 
 # Assign default value in case of no option
 if [ -z "${DEST_PATH}" ]; then
