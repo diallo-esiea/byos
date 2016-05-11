@@ -81,8 +81,7 @@ for i in "$@"; do
 
       # Parse configuration file
       source ${FILE}
-
-      break
+      shift
       ;;
 
     -g=*|--grsec=*)
