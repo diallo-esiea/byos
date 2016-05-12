@@ -4,8 +4,11 @@ CAT=/bin/cat
 ECHO=/bin/echo
 MKDIR=/bin/mkdir
 MOUNT=/bin/mount
+PWD=/bin/pwd
+SED=/bin/sed
 UMOUNT=/bin/umount
 
+FDISK=/sbin/fdisk
 LVCREATE=/sbin/lvcreate
 MKSWAP=/sbin/mkswap
 MKFS=/sbin/mkfs
@@ -19,51 +22,111 @@ DPKG_RECONFIGURE=/usr/sbin/dpkg-reconfigure
 FAKECHROOT=/usr/bin/fakechroot
 PASSWD=/usr/bin/passwd
 
-ARCH=amd64    		# i386, amd64
-HOSTNAME=debian
-INCLUDE=grub2,locales
-MIRROR=http://mirror.lrp/debian
-PVNAME=/dev/sdx
-SUITE=sid           # jessie, wheezy, sid, stable, testing, unstable
-# Attention le fakeroot ne fonctionne pas avec Jessie le 18/04/2016 (cf. https://github.com/dex4er/fakechroot/pull/37)
-# => pour Jessie, remplacer FAKEROOT=<chaine vide> et FAKECHROOT=<chaine vide> et lancer build_system en root ou sudo
-TARGET=debian
-TYPE=ext4
-VARIANT=minbase     # minbase, buildd, fakechroot, scratchbox
-VGNAME=pcengines
-
-USAGE="$(basename "$0") [options] SUITE TARGET\n\n
+USAGE="$(basename "$0") [options] [DEVICE] TARGET SUITE\n\n
+\t\tDEVICE\t\n
 \t\tSUITE\t(lenny, squeeze, sid)\n
 \t\tTARGET\t\n\n
 \toptions:\n
 \t--------\n
-\t\t-i, --include\tComma separated list of packages which will be added to download and extract lists\n
-\t\t-m, --mirror\tCan be an http:// URL, a file:/// URL, or an ssh:/// URL\n
-\t\t-v, --variant\tName of the bootstrap script variant to use (minbase, buildd, fakechroot, scratchbox)"
+\t\t-f=FILE, --file=FILE\tConfiguration file\n
+\t\t-h, --help\t\tDisplay this message\n
+\t\t-i=PATH, --include=PATH\tComma separated list of packages which will be added to download and extract lists\n
+\t\t-m=PATH, --mirror=PATH\tCan be an http:// URL, a file:/// URL, or an ssh:/// URL\n
+\t\t-v=VAR, --variant=VAR\tName of the bootstrap script variant to use (minbase, buildd, fakechroot, scratchbox)"
 
+# Manage options 
 for i in "$@"; do
   case $i in
     -h|--help)
       ${ECHO} -e ${USAGE}
       exit 0
       ;;
+
+    -f=*|--file=*)
+      # Convert relative path to absolute path
+      if [[ ${i#*=} != /* ]]; then
+        FILE=`${PWD}`/${i#*=}
+      else
+        FILE="${i#*=}"
+      fi
+
+      if [ ! -f ${FILE} ]; then
+        ${ECHO} "File $FILE does not exists"
+        exit 1
+      fi
+
+      # Parse configuration file
+      source ${FILE}
+      shift
+      ;;
+
+    -*|--*) # unknown option
+      ${ECHO} -e ${USAGE}
+      exit 1
+      ;;
+  
   esac
 done
 
-#${PVCREATE} ${PVNAME}
-#${VGCREATE} ${VGNAME} ${PVNAME}
-#${LVCREATE} -n root -L 10G ${VGNAME}
-#${LVCREATE} -n boot -L 200M ${VGNAME}
-#${LVCREATE} -n var -L 20G ${VGNAME}
-#${LVCREATE} -n log -L 10G ${VGNAME}
-#${LVCREATE} -n home -L 10G ${VGNAME}
-#${LVCREATE} -n swap -L 1G ${VGNAME}
-#${LVCREATE} -n srv -l 100%FREE ${VGNAME}
+if [ $# -eq 2 ]; then
+  TARGET=$1
+  SUITE=$2
+elif [ $# -eq 3 ]; then
+  DEVICE=$1
+  TARGET=$2
+  SUITE=$3
+else
+  ${ECHO} -e ${USAGE}
+  exit 1
+fi
 
-#for d in root boot var log tmp home srv; do 
-#  ${MKFS} --type=${TYPE} /dev/mapper/${VGNAME}-${d} -L ${VGNAME}-${d}; 
-#done
-#${MKSWAP} /dev/mapper/${VGNAME}-swap -L ${VGNAME}-swap
+# Convert relative path to absolute path
+for i in TARGET; do 
+  if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
+    eval $i=`${PWD}`/${!i}
+  fi
+done
+
+# Create and format boot partition
+${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+o # clear the in memory partition table
+n # new partition
+p # primary partition
+1 # partition number 1
+  # default - start at beginning of disk 
++100M # 100 MB boot parttion
+a # make a partition bootable
+w # write the partition table
+q # and we're done
+EOF
+${MKFS} --type=${TYPE} -L boot ${device}1; 
+
+# Create Physical Volume (PVNAME) partition
+${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+n # new partition
+p # primary partition
+2 # partion number 2
+  # default, start immediately after preceding partition
+  # default, extend partition to end of disk
+w # write the partition table
+q # and we're done
+EOF
+
+${PVCREATE} ${DEVICE}2
+${VGCREATE} ${VGNAME} ${DEVICE}2
+
+# Create and format Logical Volume (LVNAME)
+for lvname in "${PART[@]}"; do
+  set $lvname
+  ${LVCREATE} -n $1 -L $2 ${VGNAME}
+  ${LVNAME}=${VGNAME}-$1
+  ${MKFS} --type=$3 -L $1 /dev/mapper/${LVNAME}; 
+done
+
+${LVCREATE} -n swap -L 1G ${VGNAME}
+${MKSWAP} /dev/mapper/${VGNAME}-swap -L ${VGNAME}-swap
+
+exit 0
 
 #${MOUNT} /dev/mapper/${VGNAME}-root ${TARGET}
 #${MKDIR} -p ${TARGET}/{boot,var,home}
@@ -72,13 +135,6 @@ done
 #${MOUNT} /dev/mapper/${VGNAME}-var ${TARGET}/var
 #${MKDIR} -p ${TARGET}/var/log
 #${MOUNT} /dev/mapper/${VGNAME}-log ${TARGET}/var/log
-
-# Binding the virtual filesystems
-#${MKDIR} -p ${TARGET}/{proc,sys,dev}
-#for i in proc sys dev; do 
-#  ${MOUNT} -o bind /$i ${TARGET}/$i; 
-#done
-#${MOUNT} -t proc none ${TARGET}/proc
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${TARGET} ${MIRROR}
 
@@ -121,6 +177,13 @@ proc                /proc           proc    defaults                    0       
 sysfs               /sys            sysfs   defaults                    0       0
 tmpfs               /tmp            tmpfs   defaults                    0       0
 EOF
+
+# Binding the virtual filesystems
+#${MKDIR} -p ${TARGET}/{proc,sys,dev}
+#for i in proc sys dev; do 
+#  ${MOUNT} -o bind /$i ${TARGET}/$i; 
+#done
+#${MOUNT} -t proc none ${TARGET}/proc
 
 # Entering the chroot environment
 #${FAKECHROOT} ${CHROOT} ${TARGET} /bin/bash 
