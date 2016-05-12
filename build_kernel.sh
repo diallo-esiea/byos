@@ -28,15 +28,15 @@ USAGE="$(basename "$0") [options] CONFIG VERSION\n\n
 \t\tVERSION\tKernel version to build\n\n
 \toptions:\n
 \t--------\n
-\t\t-a, --alt\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...)\n
-\t\t-d, --deb\tCreate Debian package archive\n
-\t\t-f, --file\tConfiguration file\n
-\t\t-g, --grsec\tGrsecurity patch\n
-\t\t-h, --help\tDisplay this message\n
-\t\t-l, --local\tPath to get the kernel archive (instead of official Linux Kernel Archives URL)\n
-\t\t-n, --nodelete\tKeep temporary files\n
-\t\t-p, --path\tPath to install kernel and kernel modules (default=/boot and /lib)\n
-\t\t-t, --temp\tTemporary folder"
+\t\t-a=ALT, --alt=ALT\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...)\n
+\t\t-d, --deb\t\tCreate Debian package archive\n
+\t\t-f=FILE, --file=FILE\tConfiguration file\n
+\t\t-g=PATCH, --grsec=PATCH\tGrsecurity patch\n
+\t\t-h, --help\t\tDisplay this message\n
+\t\t-l=PATH, --local=PATH\tPath to get the kernel archive (instead of official Linux Kernel Archives URL)\n
+\t\t-n, --nodelete\t\tKeep temporary files\n
+\t\t-p=PATH, --path=PATH\tPath to install kernel and kernel modules (default=/boot and /lib)\n
+\t\t-t=PATH, --temp=PATH\tTemporary folder"
 
 # Manage options 
 for i in "$@"; do
