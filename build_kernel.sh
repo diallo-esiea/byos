@@ -23,11 +23,9 @@ WGET=/usr/bin/wget
 
 NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
 
-USAGE="$(basename "$0") [options] {-c|--conf}=config-file {-v|--version}=kernel-version\n\n
-\tparameters:\n
-\t-----------\n
-\t\t-c, --conf\tLinux kernel config file\n
-\t\t-v, --version\tKernel version to build\n\n
+USAGE="$(basename "$0") [options] CONFIG VERSION\n\n
+\t\tCONFIG\tLinux kernel config file\n
+\t\tVERSION\tKernel version to build\n\n
 \toptions:\n
 \t--------\n
 \t\t-a, --alt\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...)\n
@@ -40,6 +38,7 @@ USAGE="$(basename "$0") [options] {-c|--conf}=config-file {-v|--version}=kernel-
 \t\t-p, --path\tPath to install kernel and kernel modules (default=/boot and /lib)\n
 \t\t-t, --temp\tTemporary folder"
 
+# Manage options 
 for i in "$@"; do
   case $i in
     -a==*|--alt=*)
@@ -118,7 +117,7 @@ for i in "$@"; do
       shift
       ;;
   
-    *)    # unknown option
+    -*|--*) # unknown option
       ${ECHO} -e ${USAGE}
       exit 1
       ;;
@@ -126,16 +125,16 @@ for i in "$@"; do
   esac
 done
 
-# Check parameters
-if [ -z "${CONF_FILE}" ]; then
-  ${ECHO} "None Linux kernel config file" >&2
+if [ $# -ne 2 ]; then
+  ${ECHO} -e ${USAGE}
   exit 1
 fi
 
-if [ -z "${KERNEL_VERSION}" ]; then
-  ${ECHO} "None kernel version" >&2
-  exit 1
-fi
+# Linux kernel config file
+CONF_FILE=$1
+
+# Kernel version to build
+KERNEL_VERSION=$2
 
 # Convert relative path to absolute path
 for i in CONF_FILE DEST_PATH GRSEC_PATCH KERNEL_PATH TMP_PATH; do 
