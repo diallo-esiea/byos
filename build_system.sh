@@ -128,8 +128,7 @@ ${VGCREATE} ${VGNAME} ${DEVICE}2
 for lvname in "${PART[@]}"; do
   set $lvname
   ${LVCREATE} -n $1 -L $2 ${VGNAME}
-  ${LVNAME}=${VGNAME}-$1
-  ${MKFS} --type=$3 -L $1 /dev/mapper/${LVNAME}; 
+  ${MKFS} --type=$3 -L $1 /dev/mapper/${VGNAME}-$1; 
 done
 
 ${LVCREATE} -n swap -L 1G ${VGNAME}
