@@ -213,7 +213,6 @@ EOF
 
 ${UMOUNT} ${DEST_PATH}/var/log
 ${UMOUNT} ${DEST_PATH}/var
-${UMOUNT} ${DEST_PATH}/tmp
 ${UMOUNT} ${DEST_PATH}/srv
 ${UMOUNT} ${DEST_PATH}/home
 ${UMOUNT} ${DEST_PATH}
