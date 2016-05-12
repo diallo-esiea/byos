@@ -24,14 +24,15 @@ PASSWD=/usr/bin/passwd
 
 USAGE="$(basename "$0") [options] [DEVICE] TARGET SUITE\n\n
 \t\tDEVICE\t\n
-\t\tSUITE\t(lenny, squeeze, sid)\n
 \t\tTARGET\t\n\n
+\t\tSUITE\t(lenny, squeeze, sid)\n
 \toptions:\n
 \t--------\n
 \t\t-f=FILE, --file=FILE\tConfiguration file\n
 \t\t-h, --help\t\tDisplay this message\n
 \t\t-i=PATH, --include=PATH\tComma separated list of packages which will be added to download and extract lists\n
 \t\t-m=PATH, --mirror=PATH\tCan be an http:// URL, a file:/// URL, or an ssh:/// URL\n
+\t\t-p=PATH, --path=PATH\tPath to install system (default=./TARGET)\n
 \t\t-v=VAR, --variant=VAR\tName of the bootstrap script variant to use (minbase, buildd, fakechroot, scratchbox)"
 
 # Manage options 
@@ -80,12 +81,20 @@ else
   exit 1
 fi
 
+# Assign default value in case of no option
+if [ -z "${DEST_PATH}" ]; then
+  DEST_PATH=${TARGET}
+fi
+
 # Convert relative path to absolute path
-for i in TARGET; do 
+for i in DEST_PATH; do 
   if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
     eval $i=`${PWD}`/${!i}
   fi
 done
+
+# Create DEST_PATH if not exists 
+${MKDIR} -p ${DEST_PATH}
 
 # Create and format boot partition
 ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
@@ -126,22 +135,20 @@ done
 ${LVCREATE} -n swap -L 1G ${VGNAME}
 ${MKSWAP} /dev/mapper/${VGNAME}-swap -L ${VGNAME}-swap
 
-exit 0
+${MOUNT} /dev/mapper/${VGNAME}-root ${DEST_PATH}
+${MKDIR} -p ${DEST_PATH}/{boot,var,home}
+${MOUNT} /dev/mapper/${VGNAME}-boot ${DEST_PATH}/boot
+${MOUNT} /dev/mapper/${VGNAME}-home ${DEST_PATH}/home
+${MOUNT} /dev/mapper/${VGNAME}-var ${DEST_PATH}/var
+${MKDIR} -p ${DEST_PATH}/var/log
+${MOUNT} /dev/mapper/${VGNAME}-log ${DEST_PATH}/var/log
 
-#${MOUNT} /dev/mapper/${VGNAME}-root ${TARGET}
-#${MKDIR} -p ${TARGET}/{boot,var,home}
-#${MOUNT} /dev/mapper/${VGNAME}-boot ${TARGET}/boot
-#${MOUNT} /dev/mapper/${VGNAME}-home ${TARGET}/home
-#${MOUNT} /dev/mapper/${VGNAME}-var ${TARGET}/var
-#${MKDIR} -p ${TARGET}/var/log
-#${MOUNT} /dev/mapper/${VGNAME}-log ${TARGET}/var/log
-
-${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${TARGET} ${MIRROR}
+${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
 
 # Set the hostname
-${ECHO} ${HOSTNAME} > ${TARGET}/etc/hostname
+${ECHO} ${HOSTNAME} > ${DEST_PATH}/etc/hostname
 
-${CAT} > ${TARGET}/etc/apt/sources.list << EOF
+${CAT} > ${DEST_PATH}/etc/apt/sources.list << EOF
 deb ${MIRROR} ${SUITE} main contrib non-free
 deb-src ${MIRROR} ${SUITE} main contrib non-free
 
@@ -152,12 +159,12 @@ deb http://security.debian.org/debian-security ${SUITE}/updates main contrib non
 deb-src http://security.debian.org/debian-security ${SUITE}/updates main contrib non-free
 EOF
 
-${CAT} > ${TARGET}/etc/apt/apt.conf.d/60recommends <<EOF
+${CAT} > ${DEST_PATH}/etc/apt/apt.conf.d/60recommends <<EOF
 APT::Install-Recommends "0";
 APT::Install-Suggests "0";
 EOF
 
-${CAT} > ${TARGET}/etc/fstab << EOF
+${CAT} > ${DEST_PATH}/etc/fstab << EOF
 # /etc/fstab: static file system information.
 #
 # Use 'blkid' to print the universally unique identifier for a
@@ -202,10 +209,11 @@ EOF
 #${EXIT}
 
 # Unbinding the virtual filesystems
-#${UMOUNT} ${TARGET}/var/log
-#${UMOUNT} ${TARGET}/{boot, var, home, tmp}
-#${UMOUNT} ${TARGET}/{dev, proc, sys}
-#${UMOUNT} ${TARGET}
+#${UMOUNT} ${DEST_PATH}/{dev, proc, sys}
+
+${UMOUNT} ${DEST_PATH}/var/log
+${UMOUNT} ${DEST_PATH}/{boot, var, home, tmp}
+${UMOUNT} ${DEST_PATH}
 
 #vgchange -a n
 
