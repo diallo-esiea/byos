@@ -135,9 +135,10 @@ ${LVCREATE} -n swap -L 1G ${VGNAME}
 ${MKSWAP} /dev/mapper/${VGNAME}-swap -L ${VGNAME}-swap
 
 ${MOUNT} /dev/mapper/${VGNAME}-root ${DEST_PATH}
-${MKDIR} -p ${DEST_PATH}/{boot,var,home}
-${MOUNT} /dev/mapper/${VGNAME}-boot ${DEST_PATH}/boot
+${MKDIR} -p ${DEST_PATH}/{boot,home,srv,var}
+${MOUNT} ${device}1 ${DEST_PATH}/boot
 ${MOUNT} /dev/mapper/${VGNAME}-home ${DEST_PATH}/home
+${MOUNT} /dev/mapper/${VGNAME}-srv ${DEST_PATH}/srv
 ${MOUNT} /dev/mapper/${VGNAME}-var ${DEST_PATH}/var
 ${MKDIR} -p ${DEST_PATH}/var/log
 ${MOUNT} /dev/mapper/${VGNAME}-log ${DEST_PATH}/var/log
@@ -177,7 +178,7 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 /dev/${VGNAME}/log  /var/log        ${TYPE} defaults,noatime            1       2
 /dev/${VGNAME}/swap none            swap    swap                        0       0
 /dev/${VGNAME}/srv  /srv            ${TYPE} defaults,noatime            1       2
-/dev/${VGNAME}/var  /var            ${TYPE} defaults,noatime            1       2
+/dev/${VGNAME}/ /var            ${TYPE} defaults,noatime            1       2
 #cgroup             /sys/fs/cgroup  cgroup  defaults                    0       0
 proc                /proc           proc    defaults                    0       0
 sysfs               /sys            sysfs   defaults                    0       0
@@ -211,7 +212,10 @@ EOF
 #${UMOUNT} ${DEST_PATH}/{dev, proc, sys}
 
 ${UMOUNT} ${DEST_PATH}/var/log
-${UMOUNT} ${DEST_PATH}/{boot, var, home, tmp}
+${UMOUNT} ${DEST_PATH}/var
+${UMOUNT} ${DEST_PATH}/tmp
+${UMOUNT} ${DEST_PATH}/srv
+${UMOUNT} ${DEST_PATH}/home
 ${UMOUNT} ${DEST_PATH}
 
 #vgchange -a n
