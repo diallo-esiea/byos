@@ -12,6 +12,7 @@ FDISK=/sbin/fdisk
 LVCREATE=/sbin/lvcreate
 MKSWAP=/sbin/mkswap
 MKFS=/sbin/mkfs
+PARTPROBE=/sbin/partprobe
 PVCREATE=/sbin/pvcreate
 VGCREATE=/sbin/vgcreate
 
@@ -96,19 +97,38 @@ done
 # Create DEST_PATH if not exists 
 ${MKDIR} -p ${DEST_PATH}
 
-# Create and format boot partition
+# Get boot partition informations
+for part in "${PART[@]}"; do
+  set $part
+  if [ "$1" == "boot" ]; then
+     break
+  fi
+done
+
+# Check if boot partition informations are present
+if [ "$1" != "boot" ]; then
+  ${ECHO} "boot partition is not present"
+  exit 1
+fi
+
+# Create boot partition
 ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
 o # clear the in memory partition table
 n # new partition
 p # primary partition
 1 # partition number 1
   # default - start at beginning of disk 
-+100M # 100 MB boot parttion
+$2 # boot partition size
 a # make a partition bootable
 w # write the partition table
 q # and we're done
 EOF
-${MKFS} --type=${TYPE} -L boot ${device}1; 
+
+# Informs kernel of partition table changes
+${PARTPROBE}
+
+# Format boot partition
+${MKFS} --type=$3 -L $1 ${device}1; 
 
 # Create Physical Volume (PVNAME) partition
 ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
@@ -121,18 +141,30 @@ w # write the partition table
 q # and we're done
 EOF
 
+# Informs kernel of partition table changes
+${PARTPROBE}
+
 ${PVCREATE} ${DEVICE}2
 ${VGCREATE} ${VGNAME} ${DEVICE}2
 
 # Create and format Logical Volume (LVNAME)
 for lvname in "${PART[@]}"; do
   set $lvname
-  ${LVCREATE} -n $1 -L $2 ${VGNAME}
-  ${MKFS} --type=$3 -L $1 /dev/mapper/${VGNAME}-$1; 
+  if [ "$1" != "boot" ] && [ "$1" != "swap" ]; then
+    ${LVCREATE} -n $1 -L $2 ${VGNAME}
+    ${MKFS} --type=$3 -L $1 /dev/mapper/${VGNAME}-$1; 
+  fi
 done
 
-${LVCREATE} -n swap -L 1G ${VGNAME}
-${MKSWAP} /dev/mapper/${VGNAME}-swap -L ${VGNAME}-swap
+# Create and format swap partition
+for lvname in "${PART[@]}"; do
+  set $lvname
+  if [ "$1" == "swap" ]; then
+    ${LVCREATE} -n $1 -L $2 ${VGNAME}
+    ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
+    break
+  fi
+done
 
 ${MOUNT} /dev/mapper/${VGNAME}-root ${DEST_PATH}
 ${MKDIR} -p ${DEST_PATH}/{boot,home,srv,var}
