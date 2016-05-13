@@ -168,7 +168,7 @@ done
 
 ${MOUNT} /dev/mapper/${VGNAME}-root ${DEST_PATH}
 ${MKDIR} -p ${DEST_PATH}/{boot,home,srv,var}
-${MOUNT} ${device}1 ${DEST_PATH}/boot
+${MOUNT} ${DEVICE}1 ${DEST_PATH}/boot
 ${MOUNT} /dev/mapper/${VGNAME}-home ${DEST_PATH}/home
 ${MOUNT} /dev/mapper/${VGNAME}-srv ${DEST_PATH}/srv
 ${MOUNT} /dev/mapper/${VGNAME}-var ${DEST_PATH}/var
