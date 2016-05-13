@@ -118,7 +118,7 @@ n # new partition
 p # primary partition
 1 # partition number 1
   # default - start at beginning of disk 
-$2 # boot partition size
++$2 # boot partition size
 a # make a partition bootable
 w # write the partition table
 q # and we're done
