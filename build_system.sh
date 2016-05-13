@@ -204,13 +204,13 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system>     <mount point>   <type>  <options>                 <dump>  <pass>
-/dev/root           /               ${TYPE} noatime,errors=remount-ro   0       1
-/dev/${VGNAME}/boot /boot           ${TYPE} defaults,noatime            1       2
-/dev/${VGNAME}/home /home           ${TYPE} defaults,noatime            1       2
-/dev/${VGNAME}/log  /var/log        ${TYPE} defaults,noatime            1       2
+/boot               /boot           ext2    noatime,errors=remount-ro   0       1
+/dev/${VGNAME}/root /               ext4    defaults,noatime            1       2
+/dev/${VGNAME}/home /home           ext4    defaults,noatime            1       2
+/dev/${VGNAME}/log  /var/log        ext4    defaults,noatime            1       2
 /dev/${VGNAME}/swap none            swap    swap                        0       0
-/dev/${VGNAME}/srv  /srv            ${TYPE} defaults,noatime            1       2
-/dev/${VGNAME}/ /var            ${TYPE} defaults,noatime            1       2
+/dev/${VGNAME}/srv  /srv            ext2    defaults,noatime            1       2
+/dev/${VGNAME}/var  /var            ext2    defaults,noatime            1       2
 #cgroup             /sys/fs/cgroup  cgroup  defaults                    0       0
 proc                /proc           proc    defaults                    0       0
 sysfs               /sys            sysfs   defaults                    0       0
@@ -241,13 +241,16 @@ EOF
 #${EXIT}
 
 # Unbinding the virtual filesystems
-#${UMOUNT} ${DEST_PATH}/{dev, proc, sys}
+#for i in proc sys dev; do 
+#  ${UMOUNT} ${TARGET}/$i; 
+#done
 
-${UMOUNT} ${DEST_PATH}/var/log
-${UMOUNT} ${DEST_PATH}/var
-${UMOUNT} ${DEST_PATH}/srv
-${UMOUNT} ${DEST_PATH}/home
-${UMOUNT} ${DEST_PATH}
+#${UMOUNT} ${DEST_PATH}/var/log
+#${UMOUNT} ${DEST_PATH}/var
+#${UMOUNT} ${DEST_PATH}/srv
+#${UMOUNT} ${DEST_PATH}/home
+#${UMOUNT} ${DEST_PATH}/boot
+#${UMOUNT} ${DEST_PATH}
 
 #vgchange -a n
 
