@@ -128,7 +128,7 @@ EOF
 ${PARTPROBE}
 
 # Format boot partition
-${MKFS} --type=$3 -L $1 ${device}1; 
+${MKFS} --type=$3 -L $1 ${DEVICE}1; 
 
 # Create Physical Volume (PVNAME) partition
 ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
