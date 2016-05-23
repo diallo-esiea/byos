@@ -94,9 +94,6 @@ for i in DEST_PATH; do
   fi
 done
 
-# Create DEST_PATH if not exists 
-${MKDIR} -p ${DEST_PATH}
-
 # Get boot partition informations
 for part in "${PART[@]}"; do
   set $part
@@ -118,7 +115,7 @@ n # new partition
 p # primary partition
 1 # partition number 1
   # default - start at beginning of disk 
-+$2 # boot partition size
++$3 # boot partition size
 a # make a partition bootable
 w # write the partition table
 q # and we're done
@@ -128,54 +125,81 @@ EOF
 ${PARTPROBE}
 
 # Format boot partition
-${MKFS} --type=$3 -L $1 ${DEVICE}1; 
+${MKFS} --type=$4 -L $1 ${DEVICE}1; 
 
-# Create Physical Volume (PVNAME) partition
-${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-n # new partition
-p # primary partition
-2 # partion number 2
-  # default, start immediately after preceding partition
-  # default, extend partition to end of disk
-w # write the partition table
-q # and we're done
+if [ -n "${VGNAME}" ]; then
+  # Create Physical Volume (PVNAME) partition
+  ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+  n # new partition
+  p # primary partition
+  2 # partion number 2
+    # default, start immediately after preceding partition
+    # default, extend partition to end of disk
+  w # write the partition table
+  q # and we're done
 EOF
+  
+  # Informs kernel of partition table changes
+  ${PARTPROBE}
+  
+  # Create Physical Volume (VGNAME)
+  ${PVCREATE} ${DEVICE}2
+  ${VGCREATE} ${VGNAME} ${DEVICE}2
+  
+  # Create and format Logical Volume (LVNAME)
+  for lvname in "${PART[@]}"; do
+    set $lvname
+    if [ "$1" != "boot" ]; then
+      ${LVCREATE} -n $1 -L $3 ${VGNAME}
+      if [ "$1" == "swap" ]; then
+        ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
+      else
+        ${MKFS} --type=$4 -L $1 /dev/mapper/${VGNAME}-$1; 
+      fi
+    fi
+  done
 
-# Informs kernel of partition table changes
-${PARTPROBE}
+  # Add LVM package
+  INCLUDE=${INCLUDE},lvm2
+fi
 
-${PVCREATE} ${DEVICE}2
-${VGCREATE} ${VGNAME} ${DEVICE}2
-
-# Create and format Logical Volume (LVNAME)
-for lvname in "${PART[@]}"; do
-  set $lvname
-  if [ "$1" != "boot" ] && [ "$1" != "swap" ]; then
-    ${LVCREATE} -n $1 -L $2 ${VGNAME}
-    ${MKFS} --type=$3 -L $1 /dev/mapper/${VGNAME}-$1; 
+# Mount all partitions
+for dir in "${PART[@]}"; do
+  set $dir
+  if [ "$1" != "boot" ]  && [ "$1" != "swap" ]; then
+    ${MKDIR} -p ${DEST_PATH}$2
+    ${MOUNT} /dev/mapper/${VGNAME}-$1 ${DEST_PATH}$2
   fi
 done
 
-# Create and format swap partition
-for lvname in "${PART[@]}"; do
-  set $lvname
-  if [ "$1" == "swap" ]; then
-    ${LVCREATE} -n $1 -L $2 ${VGNAME}
-    ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
-    break
-  fi
-done
-
-${MOUNT} /dev/mapper/${VGNAME}-root ${DEST_PATH}
-${MKDIR} -p ${DEST_PATH}/{boot,home,srv,var}
+# Mount boot partition
+${MKDIR} -p ${DEST_PATH}/boot
 ${MOUNT} ${DEVICE}1 ${DEST_PATH}/boot
-${MOUNT} /dev/mapper/${VGNAME}-home ${DEST_PATH}/home
-${MOUNT} /dev/mapper/${VGNAME}-srv ${DEST_PATH}/srv
-${MOUNT} /dev/mapper/${VGNAME}-var ${DEST_PATH}/var
-${MKDIR} -p ${DEST_PATH}/var/log
-${MOUNT} /dev/mapper/${VGNAME}-log ${DEST_PATH}/var/log
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
+
+${CAT} > ${DEST_PATH}/etc/default/grub << EOF
+# If you change this file, run 'update-grub' afterwards to update
+# /boot/grub/grub.cfg.
+# For full documentation of the options in this file, see:
+#   info -f grub -n 'Simple configuration'
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+GRUB_CMDLINE_LINUX_DEFAULT="quiet"
+GRUB_CMDLINE_LINUX="video=off elevator=deadline console=ttyS0,115200"
+
+# Uncomment to disable graphical terminal (grub-pc only)
+#GRUB_TERMINAL=console
+
+# Uncomment if you don't want GRUB to pass "root=UUID=xxx" parameter to Linux
+#GRUB_DISABLE_LINUX_UUID=true
+
+GRUB_DISABLE_RECOVERY="true"
+
+GRUB_TERMINAL=serial
+GRUB_SERIAL_COMMAND="serial --unit=0 --speed=115200 --stop=1"
+EOF
 
 # Set the hostname
 ${ECHO} ${HOSTNAME} > ${DEST_PATH}/etc/hostname
