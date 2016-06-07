@@ -15,6 +15,7 @@ TAR=/bin/tar
 AWK=/usr/bin/awk
 DPKG_DEB=/usr/bin/dpkg-deb
 FAKEROOT=/usr/bin/fakeroot 
+GIT=/usr/bin/git
 GPG=/usr/bin/gpg
 MAKE=/usr/bin/make
 PATCH=/usr/bin/patch
@@ -33,6 +34,7 @@ USAGE="$(basename "$0") [options] CONFIG VERSION\n\n
 \t\t-f=FILE, --file=FILE\tConfiguration file\n
 \t\t-g=PATCH, --grsec=PATCH\tGrsecurity patch\n
 \t\t-h, --help\t\tDisplay this message\n
+\t\t-i=PATCH, --git=PATCH\tGit path to get the kernel archive\n
 \t\t-l=PATH, --local=PATH\tPath to get the kernel archive (instead of official Linux Kernel Archives URL)\n
 \t\t-n, --nodelete\t\tKeep temporary files\n
 \t\t-p=PATH, --path=PATH\tPath to install kernel and kernel modules (default=/boot and /lib)\n
@@ -91,6 +93,11 @@ for i in "$@"; do
     -h|--help)
       ${ECHO} -e ${USAGE}
       exit 0
+      ;;
+
+    -i=*|--git=*)
+      GIT_PATCH="${i#*=}"
+      shift
       ;;
 
     -l=*|--local=*)
@@ -162,59 +169,76 @@ fi
 
 pushd ${TMP_PATH} > /dev/null || exit 1
 
-# kernel.org branch url and target files
-KERNEL_NAME=linux-${KERNEL_VERSION}
-KERNEL_TAR=${KERNEL_NAME}.tar
+if [ -z "${GIT_PATCH}" ]; then
+  pushd ${GIT_PATH} > /dev/null || exit 1
+  
+  # Remove untracked directories and untracked files
+  ${GIT} clean -d --force --quiet 
 
-# Kernel archive and signature
-if [ -z "${KERNEL_PATH}" ]; then
-  KERNEL_URL=https://www.kernel.org/pub/linux/kernel/v${KERNEL_VERSION/%.*/.x}
+  # Checkout a branch version
+  ${GIT} checkout v${KERNEL_VERSION}
   
-  # Check if BOTH kernel version AND signature file exist
-  ${WGET} -c --spider ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
-  
-  if [ $? -ne 0 ]; then
-    ${ECHO} "Kernel version does not exist" >&2
-    exit 1
-  fi
-  
-  # Download kernel AND signature
-  ${WGET} -c ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
+  # Copy config file
+  ${CP} ${CONF_FILE} ./.config
 else
-  # Check if BOTH kernel version AND signature file exist
-  if [ ! -f ${KERNEL_PATH}/${KERNEL_TAR}.xz ] || [ ! -f ${KERNEL_PATH}/${KERNEL_TAR}.sign ]; then
-    ${ECHO} "Kernel version does not exist" >&2
-    exit 1
+  KERNEL_NAME=linux-${KERNEL_VERSION}
+  KERNEL_TAR=${KERNEL_NAME}.tar
+  
+  if [ -z "${KERNEL_PATH}" ]; then
+    # Check if kernel version exists
+    if [ ! -f ${KERNEL_PATH}/${KERNEL_TAR} ]; then
+      ${ECHO} "Kernel version does not exist" >&2
+      exit 1
+    fi
+  
+    # Decompress kernel archive
+    ${TAR} -xf ${KERNEL_PATH}/${KERNEL_TAR} -C ${TMP_PATH}
+  else
+    # kernel.org branch url and target files
+    KERNEL_URL=https://www.kernel.org/pub/linux/kernel/v${KERNEL_VERSION/%.*/.x}
+    
+    # Check if BOTH kernel version AND signature file exist
+    ${WGET} -c --spider ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
+    
+    if [ $? -ne 0 ]; then
+      ${ECHO} "Kernel version does not exist" >&2
+      exit 1
+    fi
+    
+    # Download kernel AND signature
+    ${WGET} -c ${KERNEL_URL}/${KERNEL_TAR}.{sign,xz}
+  
+    # Uncompressing kernel archive
+    ${UNXZ} ${KERNEL_TAR}.xz
+    
+    # Initialize GPG keyrings
+    ${PRINTF} "" | ${GPG}
+    
+    # Initialize GPG keyrings
+    ${PRINTF} "" | ${GPG}
+    
+    # Download GPG keys
+    GPG_KEY=`${GPG} --verify ${KERNEL_TAR}.sign 2>&1 | \
+             ${AWK} '{print $NF}' | \
+             ${SED} -n '/\([0-9]\|[A-H]\)$/p' | \
+             ${SED} -n '1p'`
+    ${GPG} --recv-keys ${GPG_KEY}
+    
+    # Verify kernel archive against signature file
+    ${GPG} --verify ${KERNEL_TAR}.sign
+  
+    # Decompress kernel archive
+    ${TAR} -xf ${KERNEL_TAR} -C ${TMP_PATH}
   fi
 
-  # Copy kernel AND signature
-  ${CP} ${KERNEL_PATH}/${KERNEL_TAR}.{sign,xz} .
+  # Copy config file
+  ${CP} ${CONF_FILE} ${KERNEL_NAME}/.config
+  
+  pushd ${TMP_PATH}/${KERNEL_NAME} > /dev/null || exit 1
 fi
-
-# Initialize GPG keyrings
-${PRINTF} "" | ${GPG}
-
-# Uncompressing kernel archive
-${UNXZ} ${KERNEL_TAR}.xz
-
-# Download GPG keys
-GPG_KEY=`${GPG} --verify ${KERNEL_TAR}.sign 2>&1 | ${AWK} '{print $NF}' | ${SED} -n '/\([0-9]\|[A-H]\)$/p' | ${SED} -n '1p'`
-${GPG} --recv-keys ${GPG_KEY}
-
-# Verify kernel archive against signature file
-${GPG} --verify ${KERNEL_TAR}.sign
-
-# Decompress kernel archive
-${TAR} -xf ${KERNEL_TAR} -C ${TMP_PATH}
-
-# Copy config file
-${CP} ${CONF_FILE} ${KERNEL_NAME}/.config
-
-pushd ${TMP_PATH}/${KERNEL_NAME} > /dev/null || exit 1
 
 # Patching kernel with grsecurity
 if [ -n "${GRSEC_PATCH}" ]; then
-
   ${PATCH} -p1 < ${GRSEC_PATCH}
   
   # Configuring kernel with Grsecurity
@@ -304,8 +328,11 @@ fi
 # Delete temporary files
 if [ -z "${NO_DELETE}" ]; then
   # Delete kernel archive and decompressed kernel archive
-  ${RM} ${KERNEL_TAR}
-  ${RM} ${KERNEL_TAR}.sign
+  if [ -n "${GIT_PATH}" ]; then
+    ${RM} ${KERNEL_TAR}
+    ${RM} ${KERNEL_TAR}.sign
+  fi
+
   ${RM} -rf ${KERNEL_NAME}
 fi
 
