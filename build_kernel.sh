@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -xv
 
 CAT=/bin/cat
 CHMOD=/bin/chmod
@@ -169,7 +169,7 @@ fi
 
 pushd ${TMP_PATH} > /dev/null || exit 1
 
-if [ -z "${GIT_PATCH}" ]; then
+if [ -n "${GIT_PATH}" ]; then
   pushd ${GIT_PATH} > /dev/null || exit 1
   
   # Remove untracked directories and untracked files
@@ -184,7 +184,7 @@ else
   KERNEL_NAME=linux-${KERNEL_VERSION}
   KERNEL_TAR=${KERNEL_NAME}.tar
   
-  if [ -z "${KERNEL_PATH}" ]; then
+  if [ -n "${KERNEL_PATH}" ]; then
     # Check if kernel version exists
     if [ ! -f ${KERNEL_PATH}/${KERNEL_TAR} ]; then
       ${ECHO} "Kernel version does not exist" >&2
