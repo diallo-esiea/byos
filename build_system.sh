@@ -94,74 +94,123 @@ for i in DEST_PATH; do
   fi
 done
 
-# Get boot partition informations
-for part in "${PART[@]}"; do
-  set $part
-  if [ "$1" == "boot" ]; then
-     break
-  fi
-done
+# Set counter
+i=0
 
-# Check if boot partition informations are present
-if [ "$1" != "boot" ]; then
-  ${ECHO} "boot partition is not present"
-  exit 1
-fi
+if [ -z "${PART}" ]; then
+  # Get partition informations
+  for part in "${PART[@]}"; do
+    set $part
+  
+    if [ -n "${VGNAME}" ] && [ "$1" != "boot" ]; then
+      continue
+    fi
+  
+    i=`expr ${i} + 1`
+  
+    if [ $i -eq 1 ]; then
+      # Create first partition
+      ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+      o    # clear the in memory partition table
+      n    # new partition
+      p    # primary partition
+      ${i} # partition number
+           # default - start at beginning of disk 
+      +$3  # partition size
+      w    # write the partition table
+      q    # and we're done
+EOF
+    elif [ $i -eq 4 ]; then
+      # Create extended partition
+      ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+      n    # new partition
+      e    # extended partition
+      ${i} # partion number
+           # default, start immediately after preceding partition
+      +$3  # partition size
+      w    # write the partition table
+      q    # and we're done
+EOF
+    elif [ $i -gt 4 ]; then
+      # Create logic partition
+      ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+      n    # new partition
+      l    # logic partition
+           # default, start immediately after preceding partition
+      +$3  # partition size
+      w    # write the partition table
+      q    # and we're done
+EOF
+    else
+      # Create primary partition
+      ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+      n    # new partition
+      p    # primary partition
+      ${i} # partion number
+           # default, start immediately after preceding partition
+      +$3  # partition size
+      w    # write the partition table
+      q    # and we're done
+EOF
+    fi
 
-# Create boot partition
-${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-o # clear the in memory partition table
-n # new partition
-p # primary partition
-1 # partition number 1
-  # default - start at beginning of disk 
-+$3 # boot partition size
-a # make a partition bootable
-w # write the partition table
-q # and we're done
+    # Informs kernel of partition table changes
+    ${PARTPROBE}
+
+    if [ "$1" == "boot" ]; then
+      ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+      a    # make a partition bootable
+      ${i} # partion number
+      w    # write the partition table
+      q    # and we're done
 EOF
 
-# Informs kernel of partition table changes
-${PARTPROBE}
+      # Informs kernel of partition table changes
+      ${PARTPROBE}
+    fi
 
-# Format boot partition
-${MKFS} --type=$4 -L $1 ${DEVICE}1; 
+    # Format partition
+    ${MKFS} --type=$4 -L $1 ${DEVICE}${i}; 
 
-if [ -n "${VGNAME}" ]; then
-  # Create Physical Volume (PVNAME) partition
-  ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-  n # new partition
-  p # primary partition
-  2 # partion number 2
-    # default, start immediately after preceding partition
-    # default, extend partition to end of disk
-  w # write the partition table
-  q # and we're done
+    if [ -n "${VGNAME}" ]; then
+      # Create Physical Volume (PVNAME) partition
+      ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
+      n # new partition
+      p # primary partition
+      2 # partion number 2
+        # default, start immediately after preceding partition
+        # default, extend partition to end of disk
+      w # write the partition table
+      q # and we're done
 EOF
   
-  # Informs kernel of partition table changes
-  ${PARTPROBE}
+      # Informs kernel of partition table changes
+      ${PARTPROBE}
   
-  # Create Physical Volume (VGNAME)
-  ${PVCREATE} ${DEVICE}2
-  ${VGCREATE} ${VGNAME} ${DEVICE}2
+      # Create Physical Volume (VGNAME)
+      ${PVCREATE} ${DEVICE}2
+      ${VGCREATE} ${VGNAME} ${DEVICE}2
   
-  # Create and format Logical Volume (LVNAME)
-  for lvname in "${PART[@]}"; do
-    set $lvname
-    if [ "$1" != "boot" ]; then
-      ${LVCREATE} -n $1 -L $3 ${VGNAME}
-      if [ "$1" == "swap" ]; then
-        ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
-      else
-        ${MKFS} --type=$4 -L $1 /dev/mapper/${VGNAME}-$1; 
-      fi
+      # Create and format Logical Volume (LVNAME)
+      for lvname in "${PART[@]}"; do
+        set $lvname
+        if [ "$1" != "boot" ]; then
+          ${LVCREATE} -n $1 -L $3 ${VGNAME}
+          if [ "$1" == "swap" ]; then
+            ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
+          else
+            ${MKFS} --type=$4 -L $1 /dev/mapper/${VGNAME}-$1; 
+          fi
+        fi
+      done
+
+      # Add LVM package
+      INCLUDE=${INCLUDE},lvm2
     fi
   done
-
-  # Add LVM package
-  INCLUDE=${INCLUDE},lvm2
 fi
+
+exit 0
 
 # Mount all partitions
 for dir in "${PART[@]}"; do
