@@ -97,16 +97,22 @@ done
 # Set counter
 i=0
 
-if [ -z "${PART}" ]; then
+if [ -n "${PART}" ]; then
   # Get partition informations
   for part in "${PART[@]}"; do
     set $part
   
-    if [ -n "${VGNAME}" ] && [ "$1" != "boot" ]; then
-      continue
+    i=`expr ${i} + 1`
+
+    if [ -n "${VGNAME}" ]; then
+      if  [ "$1" != "boot" ]; then
+        continue
+      fi
+
+      # Set counter as the first partition
+      i=1
     fi
   
-    i=`expr ${i} + 1`
   
     if [ $i -eq 1 ]; then
       # Create first partition
@@ -125,22 +131,26 @@ EOF
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       n    # new partition
       e    # extended partition
-      ${i} # partion number
+           # default, start immediately after preceding partition
+           # default, extend partition to end of disk
+      n    # new partition
            # default, start immediately after preceding partition
       +$3  # partition size
       w    # write the partition table
       q    # and we're done
 EOF
-    elif [ $i -gt 4 ]; then
-      # Create logic partition
+    elif [ $i -gt 4 ] && [ $i -lt 8 ]; then
+      # Create partition in extended partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       n    # new partition
-      l    # logic partition
            # default, start immediately after preceding partition
       +$3  # partition size
       w    # write the partition table
       q    # and we're done
 EOF
+    elif [ $i -eq 8 ]; then
+      ${ECHO} -e "Too many partitions (less than 8)"
+      exit 1
     else
       # Create primary partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
@@ -206,6 +216,8 @@ EOF
 
       # Add LVM package
       INCLUDE=${INCLUDE},lvm2
+
+      break
     fi
   done
 fi
