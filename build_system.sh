@@ -94,39 +94,36 @@ for i in DEST_PATH; do
   fi
 done
 
-# Set counter
-i=0
+# Set partition number
+id=1
 
 if [ -n "${PART}" ]; then
   # Get partition informations
   for part in "${PART[@]}"; do
     set $part
   
-    i=`expr ${i} + 1`
-
     if [ -n "${VGNAME}" ]; then
-      if  [ "$1" != "boot" ]; then
+      if [ "$1" != "boot" ]; then
         continue
       fi
 
-      # Set counter as the first partition
-      i=1
+      # Set partition number as the first partition
+      id=1
     fi
   
-  
-    if [ $i -eq 1 ]; then
+    if [ $id -eq 1 ]; then
       # Create first partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      o    # clear the in memory partition table
-      n    # new partition
-      p    # primary partition
-      ${i} # partition number
-           # default - start at beginning of disk 
-      +$3  # partition size
-      w    # write the partition table
-      q    # and we're done
+      o     # clear the in memory partition table
+      n     # new partition
+      p     # primary partition
+      ${id} # partition number
+            # default - start at beginning of disk 
+      +$3   # partition size
+      w     # write the partition table
+      q     # and we're done
 EOF
-    elif [ $i -eq 4 ]; then
+    elif [ $id -eq 4 ]; then
       # Create extended partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       n    # new partition
@@ -139,7 +136,10 @@ EOF
       w    # write the partition table
       q    # and we're done
 EOF
-    elif [ $i -gt 4 ] && [ $i -lt 8 ]; then
+
+      # Increment partition number
+      id=`expr ${id} + 1`
+    elif [ $id -gt 4 ] && [ $id -lt 9 ]; then
       # Create partition in extended partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       n    # new partition
@@ -148,19 +148,19 @@ EOF
       w    # write the partition table
       q    # and we're done
 EOF
-    elif [ $i -eq 8 ]; then
-      ${ECHO} -e "Too many partitions (less than 8)"
+    elif [ $id -eq 9 ]; then
+      ${ECHO} -e "Too many partitions (more than 8)"
       exit 1
     else
       # Create primary partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      n    # new partition
-      p    # primary partition
-      ${i} # partion number
-           # default, start immediately after preceding partition
-      +$3  # partition size
-      w    # write the partition table
-      q    # and we're done
+      n     # new partition
+      p     # primary partition
+      ${id} # partion number
+            # default, start immediately after preceding partition
+      +$3   # partition size
+      w     # write the partition table
+      q     # and we're done
 EOF
     fi
 
@@ -169,10 +169,10 @@ EOF
 
     if [ "$1" == "boot" ]; then
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      a    # make a partition bootable
-      ${i} # partion number
-      w    # write the partition table
-      q    # and we're done
+      a     # make a partition bootable
+      ${id} # partion number
+      w     # write the partition table
+      q     # and we're done
 EOF
 
       # Informs kernel of partition table changes
@@ -180,26 +180,35 @@ EOF
     fi
 
     # Format partition
-    ${MKFS} --type=$4 -L $1 ${DEVICE}${i}; 
+    ${MKFS} --type=$4 -L $1 ${DEVICE}${id}; 
+
+    if [ "$1" == "root" ]; then
+      TAB=("$part ${DEVICE}${id}" "${TAB[@]}")
+    elif [ "$1" != "swap" ]; then 
+      TAB=("${TAB[@]}" "$part ${DEVICE}${id}")
+    fi
 
     if [ -n "${VGNAME}" ]; then
+      # Increment partition number
+      id=`expr ${id} + 1`
+
       # Create Physical Volume (PVNAME) partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      n # new partition
-      p # primary partition
-      2 # partion number 2
-        # default, start immediately after preceding partition
-        # default, extend partition to end of disk
-      w # write the partition table
-      q # and we're done
+      n     # new partition
+      p     # primary partition
+      ${id} # partion number 2
+            # default, start immediately after preceding partition
+            # default, extend partition to end of disk
+      w     # write the partition table
+      q     # and we're done
 EOF
   
       # Informs kernel of partition table changes
       ${PARTPROBE}
   
       # Create Physical Volume (VGNAME)
-      ${PVCREATE} ${DEVICE}2
-      ${VGCREATE} ${VGNAME} ${DEVICE}2
+      ${PVCREATE} ${DEVICE}${id}
+      ${VGCREATE} ${VGNAME} ${DEVICE}${id}
   
       # Create and format Logical Volume (LVNAME)
       for lvname in "${PART[@]}"; do
@@ -210,6 +219,12 @@ EOF
             ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
           else
             ${MKFS} --type=$4 -L $1 /dev/mapper/${VGNAME}-$1; 
+            
+            if [ "$1" == "root" ]; then
+              TAB=("$lvname /dev/mapper/${VGNAME}-$1" "${TAB[@]}")
+            else 
+              TAB=("${TAB[@]}" "$lvname /dev/mapper/${VGNAME}-$1")
+            fi
           fi
         fi
       done
@@ -219,23 +234,21 @@ EOF
 
       break
     fi
+
+    # Increment partition number
+    id=`expr ${id} + 1`
+  done
+
+  # Mount all partitions
+  for part in "${TAB[@]}"; do
+    set $part
+ 
+    ${MKDIR} -p ${DEST_PATH}$2
+    ${MOUNT} $6 ${DEST_PATH}$2
   done
 fi
 
 exit 0
-
-# Mount all partitions
-for dir in "${PART[@]}"; do
-  set $dir
-  if [ "$1" != "boot" ]  && [ "$1" != "swap" ]; then
-    ${MKDIR} -p ${DEST_PATH}$2
-    ${MOUNT} /dev/mapper/${VGNAME}-$1 ${DEST_PATH}$2
-  fi
-done
-
-# Mount boot partition
-${MKDIR} -p ${DEST_PATH}/boot
-${MOUNT} ${DEVICE}1 ${DEST_PATH}/boot
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
 
