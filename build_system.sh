@@ -11,7 +11,7 @@ UMOUNT=/bin/umount
 FDISK=/sbin/fdisk
 LVCREATE=/sbin/lvcreate
 MKSWAP=/sbin/mkswap
-MKFS=/sbin/mke2fs
+MKE2FS=/sbin/mke2fs
 PARTPROBE=/sbin/partprobe
 PVCREATE=/sbin/pvcreate
 VGCREATE=/sbin/vgcreate
@@ -180,7 +180,7 @@ EOF
     fi
 
     # Format partition
-    ${MKFS} -F --type=$4 -L $1 ${DEVICE}${id}; 
+    ${MKE2FS} -F -t $4 -L $1 ${DEVICE}${id}; 
 
     if [ "$1" == "root" ]; then
       TAB=("$part ${DEVICE}${id}" "${TAB[@]}")
@@ -218,7 +218,7 @@ EOF
           if [ "$1" == "swap" ]; then
             ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
           else
-            ${MKFS} -F --type=$4 -L $1 /dev/mapper/${VGNAME}-$1; 
+            ${MKE2FS} -F -t $4 -L $1 /dev/mapper/${VGNAME}-$1; 
             
             if [ "$1" == "root" ]; then
               TAB=("$lvname /dev/mapper/${VGNAME}-$1" "${TAB[@]}")
