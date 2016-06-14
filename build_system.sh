@@ -14,6 +14,7 @@ MKSWAP=/sbin/mkswap
 MKE2FS=/sbin/mke2fs
 PARTPROBE=/sbin/partprobe
 PVCREATE=/sbin/pvcreate
+VGCHANGE=/sbin/vgchange
 VGCREATE=/sbin/vgcreate
 
 APT_GET=/usr/bin/apt-get
@@ -94,10 +95,11 @@ for i in DEST_PATH; do
   fi
 done
 
-# Set partition number
-id=1
-
 if [ -n "${PART}" ]; then
+  # Set partition number and reset FSTAB
+  id=1
+  FSTAB=
+
   # Get partition informations
   for part in "${PART[@]}"; do
     set $part
@@ -167,6 +169,7 @@ EOF
     # Informs kernel of partition table changes
     ${PARTPROBE}
 
+    # Set bootable partition
     if [ "$1" == "boot" ]; then
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       a     # make a partition bootable
@@ -183,9 +186,9 @@ EOF
     ${MKE2FS} -F -t $4 -L $1 ${DEVICE}${id}; 
 
     if [ "$1" == "root" ]; then
-      TAB=("$part ${DEVICE}${id}" "${TAB[@]}")
+      FSTAB=("$part ${DEVICE}${id}" "${FSTAB[@]}")
     elif [ "$1" != "swap" ]; then 
-      TAB=("${TAB[@]}" "$part ${DEVICE}${id}")
+      FSTAB=("${FSTAB[@]}" "$part ${DEVICE}${id}")
     fi
 
     if [ -n "${VGNAME}" ]; then
@@ -221,9 +224,9 @@ EOF
             ${MKE2FS} -F -t $4 -L $1 /dev/mapper/${VGNAME}-$1; 
             
             if [ "$1" == "root" ]; then
-              TAB=("$lvname /dev/mapper/${VGNAME}-$1" "${TAB[@]}")
+              FSTAB=("$lvname /dev/mapper/${VGNAME}-$1" "${FSTAB[@]}")
             else 
-              TAB=("${TAB[@]}" "$lvname /dev/mapper/${VGNAME}-$1")
+              FSTAB=("${FSTAB[@]}" "$lvname /dev/mapper/${VGNAME}-$1")
             fi
           fi
         fi
@@ -238,15 +241,15 @@ EOF
     # Increment partition number
     id=`expr ${id} + 1`
   done
-
-  # Mount all partitions
-  for part in "${TAB[@]}"; do
-    set $part
- 
-    ${MKDIR} -p ${DEST_PATH}$2
-    ${MOUNT} ${!#} ${DEST_PATH}$2
-  done
 fi
+
+# Mount all partitions
+for part in "${FSTAB[@]}"; do
+  set $part
+
+  ${MKDIR} -p ${DEST_PATH}$2
+  ${MOUNT} ${!#} ${DEST_PATH}$2
+done
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
 
@@ -302,6 +305,9 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 # <file system>     <mount point>   <type>  <options>                 <dump>  <pass>
 EOF
 
+${ECHO} "/boot\t\t/boot\t\text2\t\tnoatime,errors=remount-ro\t\t0\t\t1" >> ${DEST_PATH}/etc/fstab
+${ECHO} "/dev/${VGNAME}/root\t\t/\t\text4\t\tdefaults,noatime\t\t1\t\t2\t\t" >> ${DEST_PATH}/etc/fstab
+
 #/boot               /boot           ext2    noatime,errors=remount-ro   0       1
 #/dev/${VGNAME}/root /               ext4    defaults,noatime            1       2
 #/dev/${VGNAME}/home /home           ext4    defaults,noatime            1       2
@@ -352,6 +358,8 @@ EOF
 #${UMOUNT} ${DEST_PATH}/boot
 #${UMOUNT} ${DEST_PATH}
 
-#vgchange -a n
+#if [ -n "${VGNAME}" ]; then
+#  ${VGCHANGE} -a n
+#fi
 
 exit 0
