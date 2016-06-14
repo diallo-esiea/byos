@@ -196,7 +196,7 @@ EOF
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       n     # new partition
       p     # primary partition
-      ${id} # partion number 2
+      ${id} # partion number
             # default, start immediately after preceding partition
             # default, extend partition to end of disk
       w     # write the partition table
@@ -244,11 +244,9 @@ EOF
     set $part
  
     ${MKDIR} -p ${DEST_PATH}$2
-    ${MOUNT} $6 ${DEST_PATH}$2
+    ${MOUNT} ${!#} ${DEST_PATH}$2
   done
 fi
-
-exit 0
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
 
@@ -302,13 +300,17 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system>     <mount point>   <type>  <options>                 <dump>  <pass>
-/boot               /boot           ext2    noatime,errors=remount-ro   0       1
-/dev/${VGNAME}/root /               ext4    defaults,noatime            1       2
-/dev/${VGNAME}/home /home           ext4    defaults,noatime            1       2
-/dev/${VGNAME}/log  /var/log        ext4    defaults,noatime            1       2
-/dev/${VGNAME}/swap none            swap    swap                        0       0
-/dev/${VGNAME}/srv  /srv            ext2    defaults,noatime            1       2
-/dev/${VGNAME}/var  /var            ext2    defaults,noatime            1       2
+EOF
+
+#/boot               /boot           ext2    noatime,errors=remount-ro   0       1
+#/dev/${VGNAME}/root /               ext4    defaults,noatime            1       2
+#/dev/${VGNAME}/home /home           ext4    defaults,noatime            1       2
+#/dev/${VGNAME}/log  /var/log        ext4    defaults,noatime            1       2
+#/dev/${VGNAME}/swap none            swap    swap                        0       0
+#/dev/${VGNAME}/srv  /srv            ext2    defaults,noatime            1       2
+#/dev/${VGNAME}/var  /var            ext2    defaults,noatime            1       2
+
+${CAT} >> ${DEST_PATH}/etc/fstab << EOF
 #cgroup             /sys/fs/cgroup  cgroup  defaults                    0       0
 proc                /proc           proc    defaults                    0       0
 sysfs               /sys            sysfs   defaults                    0       0
