@@ -180,7 +180,7 @@ EOF
     fi
 
     # Format partition
-    ${MKFS} --type=$4 -L $1 ${DEVICE}${id}; 
+    ${MKFS} -F --type=$4 -L $1 ${DEVICE}${id}; 
 
     if [ "$1" == "root" ]; then
       TAB=("$part ${DEVICE}${id}" "${TAB[@]}")
@@ -218,7 +218,7 @@ EOF
           if [ "$1" == "swap" ]; then
             ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
           else
-            ${MKFS} --type=$4 -L $1 /dev/mapper/${VGNAME}-$1; 
+            ${MKFS} -F --type=$4 -L $1 /dev/mapper/${VGNAME}-$1; 
             
             if [ "$1" == "root" ]; then
               TAB=("$lvname /dev/mapper/${VGNAME}-$1" "${TAB[@]}")
