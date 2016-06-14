@@ -186,9 +186,9 @@ EOF
     ${MKE2FS} -F -t $4 -L $1 ${DEVICE}${id}; 
 
     if [ "$1" == "root" ]; then
-      FSTAB=("$part ${DEVICE}${id}" "${FSTAB[@]}")
+      FSTAB=("${DEVICE}${id} $2 $4 $5 $6 $7" "${FSTAB[@]}")
     elif [ "$1" != "swap" ]; then 
-      FSTAB=("${FSTAB[@]}" "$part ${DEVICE}${id}")
+      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} $2 $4 $5 $6 $7")
     fi
 
     if [ -n "${VGNAME}" ]; then
@@ -224,9 +224,9 @@ EOF
             ${MKE2FS} -F -t $4 -L $1 /dev/mapper/${VGNAME}-$1; 
             
             if [ "$1" == "root" ]; then
-              FSTAB=("$lvname /dev/mapper/${VGNAME}-$1" "${FSTAB[@]}")
+              FSTAB=("/dev/mapper/${VGNAME}-$1 $2 $4 $5 $6 $7" "${FSTAB[@]}")
             else 
-              FSTAB=("${FSTAB[@]}" "$lvname /dev/mapper/${VGNAME}-$1")
+              FSTAB=("${FSTAB[@]}" "/dev/mapper/${VGNAME}-$1 $2 $4 $5 $6 $7")
             fi
           fi
         fi
@@ -247,8 +247,8 @@ fi
 for part in "${FSTAB[@]}"; do
   set $part
 
-  ${MKDIR} -p ${DEST_PATH}$2
-  ${MOUNT} ${!#} ${DEST_PATH}$2
+  ${MKDIR} -p ${DEST_PATH}${2}
+  ${MOUNT} ${1} ${DEST_PATH}${2}
 done
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
@@ -305,16 +305,11 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 # <file system>     <mount point>   <type>  <options>                 <dump>  <pass>
 EOF
 
-${ECHO} "/boot\t\t/boot\t\text2\t\tnoatime,errors=remount-ro\t\t0\t\t1" >> ${DEST_PATH}/etc/fstab
-${ECHO} "/dev/${VGNAME}/root\t\t/\t\text4\t\tdefaults,noatime\t\t1\t\t2\t\t" >> ${DEST_PATH}/etc/fstab
+for part in "${FSTAB[@]}"; do
+  set $part
 
-#/boot               /boot           ext2    noatime,errors=remount-ro   0       1
-#/dev/${VGNAME}/root /               ext4    defaults,noatime            1       2
-#/dev/${VGNAME}/home /home           ext4    defaults,noatime            1       2
-#/dev/${VGNAME}/log  /var/log        ext4    defaults,noatime            1       2
-#/dev/${VGNAME}/swap none            swap    swap                        0       0
-#/dev/${VGNAME}/srv  /srv            ext2    defaults,noatime            1       2
-#/dev/${VGNAME}/var  /var            ext2    defaults,noatime            1       2
+  ${ECHO} -e "${1}\t\t${2}\t\t${3}\t\t${4}\t\t${5}\t\t${6}" >> ${DEST_PATH}/etc/fstab
+done
 
 ${CAT} >> ${DEST_PATH}/etc/fstab << EOF
 #cgroup             /sys/fs/cgroup  cgroup  defaults                    0       0
