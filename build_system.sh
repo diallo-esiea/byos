@@ -2,6 +2,7 @@
 
 CAT=/bin/cat
 ECHO=/bin/echo
+LN=/bin/ln
 MKDIR=/bin/mkdir
 MOUNT=/bin/mount
 PWD=/bin/pwd
@@ -9,6 +10,7 @@ SED=/bin/sed
 UMOUNT=/bin/umount
 
 FDISK=/sbin/fdisk
+FIND=/usr/bin/find
 LVCREATE=/sbin/lvcreate
 MKSWAP=/sbin/mkswap
 MKE2FS=/sbin/mke2fs
@@ -24,7 +26,7 @@ DPKG_RECONFIGURE=/usr/sbin/dpkg-reconfigure
 FAKECHROOT=/usr/bin/fakechroot
 PASSWD=/usr/bin/passwd
 
-USAGE="$(basename "$0") [options] [DEVICE] TARGET SUITE\n\n
+USAGE="$(basename "${0}") [options] [DEVICE] TARGET SUITE\n\n
 \t\tDEVICE\t\n
 \t\tTARGET\t\n\n
 \t\tSUITE\t(lenny, squeeze, sid)\n
@@ -39,7 +41,7 @@ USAGE="$(basename "$0") [options] [DEVICE] TARGET SUITE\n\n
 
 # Manage options 
 for i in "$@"; do
-  case $i in
+  case ${i} in
     -h|--help)
       ${ECHO} -e ${USAGE}
       exit 0
@@ -54,7 +56,7 @@ for i in "$@"; do
       fi
 
       if [ ! -f ${FILE} ]; then
-        ${ECHO} "File $FILE does not exists"
+        ${ECHO} "File ${FILE} does not exists"
         exit 1
       fi
 
@@ -72,12 +74,12 @@ for i in "$@"; do
 done
 
 if [ $# -eq 2 ]; then
-  TARGET=$1
-  SUITE=$2
+  TARGET=${1}
+  SUITE=${2}
 elif [ $# -eq 3 ]; then
-  DEVICE=$1
-  TARGET=$2
-  SUITE=$3
+  DEVICE=${1}
+  TARGET=${2}
+  SUITE=${3}
 else
   ${ECHO} -e ${USAGE}
   exit 1
@@ -91,21 +93,21 @@ fi
 # Convert relative path to absolute path
 for i in DEST_PATH; do 
   if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
-    eval $i=`${PWD}`/${!i}
+    eval ${i}=`${PWD}`/${!i}
   fi
 done
 
 if [ -n "${PART}" ]; then
   # Set partition number and reset FSTAB
   id=1
-  FSTAB=
+  unset FSTAB
 
   # Get partition informations
   for part in "${PART[@]}"; do
-    set $part
+    set ${part}
   
     if [ -n "${VGNAME}" ]; then
-      if [ "$1" != "boot" ]; then
+      if [ "${1}" != "boot" ]; then
         continue
       fi
 
@@ -113,7 +115,7 @@ if [ -n "${PART}" ]; then
       id=1
     fi
   
-    if [ $id -eq 1 ]; then
+    if [ ${id} -eq 1 ]; then
       # Create first partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       o     # clear the in memory partition table
@@ -121,7 +123,7 @@ if [ -n "${PART}" ]; then
       p     # primary partition
       ${id} # partition number
             # default - start at beginning of disk 
-      +$3   # partition size
+      +${3} # partition size
       w     # write the partition table
       q     # and we're done
 EOF
@@ -134,23 +136,23 @@ EOF
            # default, extend partition to end of disk
       n    # new partition
            # default, start immediately after preceding partition
-      +$3  # partition size
+      +${3}# partition size
       w    # write the partition table
       q    # and we're done
 EOF
 
       # Increment partition number
       id=`expr ${id} + 1`
-    elif [ $id -gt 4 ] && [ $id -lt 9 ]; then
+    elif [ ${id} -gt 4 ] && [ ${id} -lt 9 ]; then
       # Create partition in extended partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
       n    # new partition
            # default, start immediately after preceding partition
-      +$3  # partition size
+      +${3}# partition size
       w    # write the partition table
       q    # and we're done
 EOF
-    elif [ $id -eq 9 ]; then
+    elif [ ${id} -eq 9 ]; then
       ${ECHO} -e "Too many partitions (more than 8)"
       exit 1
     else
@@ -160,7 +162,7 @@ EOF
       p     # primary partition
       ${id} # partion number
             # default, start immediately after preceding partition
-      +$3   # partition size
+      +${3} # partition size
       w     # write the partition table
       q     # and we're done
 EOF
@@ -183,12 +185,12 @@ EOF
     fi
 
     # Format partition
-    ${MKE2FS} -F -t $4 -L $1 ${DEVICE}${id}; 
+    ${MKE2FS} -F -t ${4} -L ${1} ${DEVICE}${id}; 
 
-    if [ "$1" == "root" ]; then
-      FSTAB=("${DEVICE}${id} $2 $4 $5 $6 $7" "${FSTAB[@]}")
-    elif [ "$1" != "swap" ]; then 
-      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} $2 $4 $5 $6 $7")
+    if [ "${1}" == "root" ]; then
+      FSTAB=("${DEVICE}${id} ${2} ${4} ${5} ${6} ${7}" "${FSTAB[@]}")
+    elif [ "${1}" != "swap" ]; then 
+      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${2} ${4} ${5} ${6} ${7}")
     fi
 
     if [ -n "${VGNAME}" ]; then
@@ -216,17 +218,17 @@ EOF
       # Create and format Logical Volume (LVNAME)
       for lvname in "${PART[@]}"; do
         set $lvname
-        if [ "$1" != "boot" ]; then
-          ${LVCREATE} -n $1 -L $3 ${VGNAME}
-          if [ "$1" == "swap" ]; then
-            ${MKSWAP} -L $1 /dev/mapper/${VGNAME}-$1
+        if [ "${1}" != "boot" ]; then
+          ${LVCREATE} -n ${1} -L ${3} ${VGNAME}
+          if [ "${1}" == "swap" ]; then
+            ${MKSWAP} -L ${1} /dev/mapper/${VGNAME}-${1}
           else
-            ${MKE2FS} -F -t $4 -L $1 /dev/mapper/${VGNAME}-$1; 
+            ${MKE2FS} -F -t ${4} -L ${1} /dev/mapper/${VGNAME}-${1}; 
             
-            if [ "$1" == "root" ]; then
-              FSTAB=("/dev/mapper/${VGNAME}-$1 $2 $4 $5 $6 $7" "${FSTAB[@]}")
+            if [ "${1}" == "root" ]; then
+              FSTAB=("/dev/mapper/${VGNAME}-${1} ${2} ${4} ${5} ${6} ${7}" "${FSTAB[@]}")
             else 
-              FSTAB=("${FSTAB[@]}" "/dev/mapper/${VGNAME}-$1 $2 $4 $5 $6 $7")
+              FSTAB=("${FSTAB[@]}" "/dev/mapper/${VGNAME}-${1} ${2} ${4} ${5} ${6} ${7}")
             fi
           fi
         fi
@@ -245,13 +247,21 @@ fi
 
 # Mount all partitions
 for part in "${FSTAB[@]}"; do
-  set $part
+  set ${part}
 
   ${MKDIR} -p ${DEST_PATH}${2}
   ${MOUNT} ${1} ${DEST_PATH}${2}
 done
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
+
+# Remplace symbolic link
+IFS=$'\n'
+LINKS=$(${FIND} ${DEST_PATH} -type l -lname "${DEST_PATH}*" -printf "%l\t%p\n")
+for link in ${LINKS}; do
+  IFS=$'\t' read path name <<< "$link"
+  ${LN} -sfn ${path#${DEST_PATH}*} ${name}
+done
 
 ${CAT} > ${DEST_PATH}/etc/default/grub << EOF
 # If you change this file, run 'update-grub' afterwards to update
@@ -306,9 +316,9 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 EOF
 
 for part in "${FSTAB[@]}"; do
-  set $part
+  set ${part}
 
-  ${ECHO} -e "${1}\t\t${2}\t\t${3}\t\t${4}\t\t${5}\t\t${6}" >> ${DEST_PATH}/etc/fstab
+  ${ECHO} -e "${1}\t${2}\t${3}\t${4}\t${5}\t${6}" >> ${DEST_PATH}/etc/fstab
 done
 
 ${CAT} >> ${DEST_PATH}/etc/fstab << EOF
