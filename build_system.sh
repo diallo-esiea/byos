@@ -24,6 +24,8 @@ CHROOT=/usr/sbin/chroot
 DEBOOTSTRAP=/usr/sbin/debootstrap
 DPKG_RECONFIGURE=/usr/sbin/dpkg-reconfigure
 FAKECHROOT=/usr/bin/fakechroot
+GRUB-INSTALL=/usr/sbin/grub-install
+GRUB-MKCONFIG=/usr/sbin/grub-mkconfig
 PASSWD=/usr/bin/passwd
 
 USAGE="$(basename "${0}") [options] [DEVICE] TARGET SUITE\n\n
@@ -329,14 +331,15 @@ tmpfs               /tmp            tmpfs   defaults                    0       
 EOF
 
 # Binding the virtual filesystems
-#${MKDIR} -p ${TARGET}/{proc,sys,dev}
-#for i in proc sys dev; do 
-#  ${MOUNT} -o bind /$i ${TARGET}/$i; 
-#done
-#${MOUNT} -t proc none ${TARGET}/proc
+#${MOUNT} --bind /dev ${DEST_PATH}/dev; 
+#${MOUNT} -t proc none ${DEST_PATH}/proc
 
 # Entering the chroot environment
-#${FAKECHROOT} ${CHROOT} ${TARGET} /bin/bash 
+#${FAKECHROOT} ${CHROOT} ${DEST_PATH} /bin/bash 
+
+# Install Grub
+#${GRUB-INSTALL} ${DEVICE}
+#${GRUB-MKCONFIG} -o ${DEST_PATH}/boot/grub.cfg
 
 # Configure locale
 #export LANG=fr_FR.UTF-8
@@ -352,9 +355,8 @@ EOF
 #${EXIT}
 
 # Unbinding the virtual filesystems
-#for i in proc sys dev; do 
-#  ${UMOUNT} ${TARGET}/$i; 
-#done
+#${UMOUNT} ${DEST_PATH}/dev; 
+#${UMOUNT} ${DEST_PATH}/proc; 
 
 #${UMOUNT} ${DEST_PATH}/var/log
 #${UMOUNT} ${DEST_PATH}/var
