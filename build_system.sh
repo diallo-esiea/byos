@@ -1,11 +1,13 @@
 #!/bin/bash -xv
 
 CAT=/bin/cat
+CHMOD=/bin/chmod
 ECHO=/bin/echo
 LN=/bin/ln
 MKDIR=/bin/mkdir
 MOUNT=/bin/mount
 PWD=/bin/pwd
+RM=/bin/rm
 SED=/bin/sed
 UMOUNT=/bin/umount
 
@@ -187,6 +189,7 @@ EOF
     fi
 
     # Format partition
+    sleep 2
     ${MKE2FS} -F -t ${4} -L ${1} ${DEVICE}${id}; 
 
     if [ "${1}" == "root" ]; then
@@ -331,15 +334,16 @@ tmpfs               /tmp            tmpfs   defaults                    0       
 EOF
 
 # Binding the virtual filesystems
-#${MOUNT} --bind /dev ${DEST_PATH}/dev; 
-#${MOUNT} -t proc none ${DEST_PATH}/proc
+${MOUNT} --bind /dev ${DEST_PATH}/dev
+${MOUNT} -t proc none ${DEST_PATH}/proc
+${MOUNT} -t sysfs none ${DEST_PATH}/sys
 
-# Entering the chroot environment
-#${FAKECHROOT} ${CHROOT} ${DEST_PATH} /bin/bash 
-
+# Create "chroot" script
+${CAT} >> ${DEST_PATH}/chroot.sh << EOF
+#!/bin/bash
 # Install Grub
 #${GRUB-INSTALL} ${DEVICE}
-#${GRUB-MKCONFIG} -o ${DEST_PATH}/boot/grub.cfg
+#${GRUB-MKCONFIG} -o /boot/grub.cfg
 
 # Configure locale
 #export LANG=fr_FR.UTF-8
@@ -348,22 +352,19 @@ EOF
 # Create a password for root
 #${PASSWD}
 
-# Update Debian package database:
-#${APT_GET} update
-
 # Quit the chroot environment
-#${EXIT}
+exit
+EOF
+${CHMOD} +x ${DEST_PATH}/chroot.sh
+
+# Entering the chroot environment
+${FAKECHROOT} ${CHROOT} ${DEST_PATH} ./chroot.sh 
+
+# Remove "chroot" script
+${RM} ${DEST_PATH}/chroot.sh
 
 # Unbinding the virtual filesystems
-#${UMOUNT} ${DEST_PATH}/dev; 
-#${UMOUNT} ${DEST_PATH}/proc; 
-
-#${UMOUNT} ${DEST_PATH}/var/log
-#${UMOUNT} ${DEST_PATH}/var
-#${UMOUNT} ${DEST_PATH}/srv
-#${UMOUNT} ${DEST_PATH}/home
-#${UMOUNT} ${DEST_PATH}/boot
-#${UMOUNT} ${DEST_PATH}
+#${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
 
 #if [ -n "${VGNAME}" ]; then
 #  ${VGCHANGE} -a n
