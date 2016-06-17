@@ -4,7 +4,6 @@ CAT=/bin/cat
 CHMOD=/bin/chmod
 CP=/bin/cp
 ECHO=/bin/echo
-LN=/bin/ln
 MKDIR=/bin/mkdir
 PRINTF=printf
 PWD=/bin/pwd
@@ -278,8 +277,6 @@ popd > /dev/null
 # Replace symbolic link
 ${RM} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/build
 ${RM} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/source
-${LN} -sf /usr/src/${KERNEL_NAME} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/build
-${LN} -sf /usr/src/${KERNEL_NAME} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/source
 
 # Create Debian package 
 if [ -n "${DEB}" ]; then
