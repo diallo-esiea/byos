@@ -26,8 +26,8 @@ CHROOT=/usr/sbin/chroot
 DEBOOTSTRAP=/usr/sbin/debootstrap
 DPKG_RECONFIGURE=/usr/sbin/dpkg-reconfigure
 FAKECHROOT=/usr/bin/fakechroot
-GRUB-INSTALL=/usr/sbin/grub-install
-GRUB-MKCONFIG=/usr/sbin/grub-mkconfig
+GRUB_INSTALL=/usr/sbin/grub-install
+GRUB_MKCONFIG=/usr/sbin/grub-mkconfig
 PASSWD=/usr/bin/passwd
 
 USAGE="$(basename "${0}") [options] [DEVICE] TARGET SUITE\n\n
@@ -189,7 +189,7 @@ EOF
     fi
 
     # Format partition
-    sleep 2
+    sleep 1
     ${MKE2FS} -F -t ${4} -L ${1} ${DEVICE}${id}; 
 
     if [ "${1}" == "root" ]; then
@@ -342,8 +342,8 @@ ${MOUNT} -t sysfs none ${DEST_PATH}/sys
 ${CAT} >> ${DEST_PATH}/chroot.sh << EOF
 #!/bin/bash
 # Install Grub
-#${GRUB-INSTALL} ${DEVICE}
-#${GRUB-MKCONFIG} -o /boot/grub.cfg
+#${GRUB_INSTALL} ${DEVICE}
+#${GRUB_MKCONFIG} -o /boot/grub.cfg
 
 # Configure locale
 #export LANG=fr_FR.UTF-8
@@ -361,7 +361,7 @@ ${CHMOD} +x ${DEST_PATH}/chroot.sh
 ${FAKECHROOT} ${CHROOT} ${DEST_PATH} ./chroot.sh 
 
 # Remove "chroot" script
-${RM} ${DEST_PATH}/chroot.sh
+#${RM} ${DEST_PATH}/chroot.sh
 
 # Unbinding the virtual filesystems
 #${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
