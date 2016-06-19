@@ -342,8 +342,8 @@ ${MOUNT} -t sysfs none ${DEST_PATH}/sys
 ${CAT} >> ${DEST_PATH}/chroot.sh << EOF
 #!/bin/bash
 # Install Grub
-#${GRUB_INSTALL} ${DEVICE}
-#${GRUB_MKCONFIG} -o /boot/grub/grub.cfg
+${GRUB_INSTALL} ${DEVICE}
+${GRUB_MKCONFIG} -o /boot/grub/grub.cfg
 
 # Configure locale
 #export LANG=fr_FR.UTF-8
