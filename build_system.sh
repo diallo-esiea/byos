@@ -11,6 +11,7 @@ RM=/bin/rm
 SED=/bin/sed
 UMOUNT=/bin/umount
 
+BLKID=/sbin/blkid
 FDISK=/sbin/fdisk
 FIND=/usr/bin/find
 LVCREATE=/sbin/lvcreate
@@ -192,10 +193,15 @@ EOF
     sleep 1
     ${MKE2FS} -F -t ${4} -L ${1} ${DEVICE}${id}; 
 
+    # Get UUID
+    UUID=$(${BLKID} ${DEVICE}${id})
+    UUID=${UUID#*UUID=\"}
+    UUID=${UUID%%\"*}
+
     if [ "${1}" == "root" ]; then
-      FSTAB=("${DEVICE}${id} ${2} ${4} ${5} ${6} ${7}" "${FSTAB[@]}")
+      FSTAB=("${DEVICE}${id} ${2} ${4} ${5} ${6} ${7} ${UUID}" "${FSTAB[@]}")
     elif [ "${1}" != "swap" ]; then 
-      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${2} ${4} ${5} ${6} ${7}")
+      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${2} ${4} ${5} ${6} ${7} ${UUID}")
     fi
 
     if [ -n "${VGNAME}" ]; then
@@ -251,11 +257,11 @@ EOF
 fi
 
 # Mount all partitions
-for part in "${FSTAB[@]}"; do
-  set ${part}
+for fstab in "${FSTAB[@]}"; do
+  IFS=$' ' read device mount type options dump pass uuid <<< "${fstab}"
 
-  ${MKDIR} -p ${DEST_PATH}${2}
-  ${MOUNT} ${1} ${DEST_PATH}${2}
+  ${MKDIR} -p ${DEST_PATH}${mount}
+  ${MOUNT} ${device} ${DEST_PATH}${mount}
 done
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
@@ -320,10 +326,15 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 # <file system>     <mount point>   <type>  <options>                 <dump>  <pass>
 EOF
 
-for part in "${FSTAB[@]}"; do
-  set ${part}
+for fstab in "${FSTAB[@]}"; do
+  IFS=$' ' read device mount type options dump pass uuid <<< "${fstab}"
 
-  ${ECHO} -e "${1}\t${2}\t${3}\t${4}\t${5}\t${6}" >> ${DEST_PATH}/etc/fstab
+  # Check if UUID is available
+  if [ -n "${uuid}" ]; then
+    ${ECHO} -e "UUID=${uuid}\t${mount}\t${type}\t${options}\t${dump}\t${pass}" >> ${DEST_PATH}/etc/fstab
+  else
+    ${ECHO} -e "${device}\t${mount}\t${type}\t${options}\t${dump}\t${pass}" >> ${DEST_PATH}/etc/fstab
+  fi
 done
 
 ${CAT} >> ${DEST_PATH}/etc/fstab << EOF
@@ -361,7 +372,7 @@ ${CHMOD} +x ${DEST_PATH}/chroot.sh
 ${FAKECHROOT} ${CHROOT} ${DEST_PATH} ./chroot.sh 
 
 # Remove "chroot" script
-#${RM} ${DEST_PATH}/chroot.sh
+${RM} ${DEST_PATH}/chroot.sh
 
 # Unbinding the virtual filesystems
 #${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
