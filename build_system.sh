@@ -197,7 +197,7 @@ EOF
     UUID=${UUID#*UUID=\"}
     UUID=${UUID%%\"*}
 
-    if [ "$name1}" == "root" ]; then
+    if [ "${name}" == "root" ]; then
       FSTAB=("${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${UUID}" "${FSTAB[@]}")
     elif [ "${name}" != "swap" ]; then 
       FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${UUID}")
