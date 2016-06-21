@@ -13,7 +13,6 @@ UMOUNT=/bin/umount
 
 BLKID=/sbin/blkid
 FDISK=/sbin/fdisk
-FIND=/usr/bin/find
 LVCREATE=/sbin/lvcreate
 MKSWAP=/sbin/mkswap
 MKE2FS=/sbin/mke2fs
@@ -27,9 +26,10 @@ CHROOT=/usr/sbin/chroot
 DEBOOTSTRAP=/usr/sbin/debootstrap
 DPKG_RECONFIGURE=/usr/sbin/dpkg-reconfigure
 FAKECHROOT=/usr/bin/fakechroot
+FIND=/usr/bin/find
 GRUB_INSTALL=/usr/sbin/grub-install
 GRUB_MKCONFIG=/usr/sbin/grub-mkconfig
-PASSWD=/usr/bin/passwd
+#CHPASSWD=/usr/sbin/chpasswd
 
 USAGE="$(basename "${0}") [options] [DEVICE] TARGET SUITE\n\n
 \t\tDEVICE\t\n
@@ -109,10 +109,10 @@ if [ -n "${PART}" ]; then
 
   # Get partition informations
   for part in "${PART[@]}"; do
-    set ${part}
+    IFS=$' ' read name mount size type options dump pass <<< "${part}"
   
     if [ -n "${VGNAME}" ]; then
-      if [ "${1}" != "boot" ]; then
+      if [ "${name}" != "boot" ]; then
         continue
       fi
 
@@ -123,27 +123,27 @@ if [ -n "${PART}" ]; then
     if [ ${id} -eq 1 ]; then
       # Create first partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      o     # clear the in memory partition table
-      n     # new partition
-      p     # primary partition
-      ${id} # partition number
-            # default - start at beginning of disk 
-      +${3} # partition size
-      w     # write the partition table
-      q     # and we're done
+      o        # clear the in memory partition table
+      n        # new partition
+      p        # primary partition
+      ${id}    # partition number
+               # default - start at beginning of disk 
+      +${size} # partition size
+      w        # write the partition table
+      q        # and we're done
 EOF
     elif [ $id -eq 4 ]; then
       # Create extended partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      n    # new partition
-      e    # extended partition
-           # default, start immediately after preceding partition
-           # default, extend partition to end of disk
-      n    # new partition
-           # default, start immediately after preceding partition
-      +${3}# partition size
-      w    # write the partition table
-      q    # and we're done
+      n        # new partition
+      e        # extended partition
+               # default, start immediately after preceding partition
+               # default, extend partition to end of disk
+      n        # new partition
+               # default, start immediately after preceding partition
+      +${size} # partition size
+      w        # write the partition table
+      q        # and we're done
 EOF
 
       # Increment partition number
@@ -151,11 +151,11 @@ EOF
     elif [ ${id} -gt 4 ] && [ ${id} -lt 9 ]; then
       # Create partition in extended partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      n    # new partition
-           # default, start immediately after preceding partition
-      +${3}# partition size
-      w    # write the partition table
-      q    # and we're done
+      n        # new partition
+               # default, start immediately after preceding partition
+      +${size} # partition size
+      w        # write the partition table
+      q        # and we're done
 EOF
     elif [ ${id} -eq 9 ]; then
       ${ECHO} -e "Too many partitions (more than 8)"
@@ -163,45 +163,44 @@ EOF
     else
       # Create primary partition
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      n     # new partition
-      p     # primary partition
-      ${id} # partion number
-            # default, start immediately after preceding partition
-      +${3} # partition size
-      w     # write the partition table
-      q     # and we're done
+      n        # new partition
+      p        # primary partition
+      ${id}    # partion number
+               # default, start immediately after preceding partition
+      +${size} # partition size
+      w        # write the partition table
+      q        # and we're done
 EOF
     fi
 
     # Informs kernel of partition table changes
-    ${PARTPROBE}
+    ${PARTPROBE}; sleep 1
 
     # Set bootable partition
     if [ "$1" == "boot" ]; then
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
-      a     # make a partition bootable
-      ${id} # partion number
-      w     # write the partition table
-      q     # and we're done
+      a       # make a partition bootable
+      ${size} # partion number
+      w       # write the partition table
+      q       # and we're done
 EOF
 
       # Informs kernel of partition table changes
-      ${PARTPROBE}
+      ${PARTPROBE}; sleep 1
     fi
 
     # Format partition
-    sleep 1
-    ${MKE2FS} -F -t ${4} -L ${1} ${DEVICE}${id}; 
+    ${MKE2FS} -F -t ${type} -L ${name} ${DEVICE}${id}; 
 
     # Get UUID
     UUID=$(${BLKID} ${DEVICE}${id})
     UUID=${UUID#*UUID=\"}
     UUID=${UUID%%\"*}
 
-    if [ "${1}" == "root" ]; then
-      FSTAB=("${DEVICE}${id} ${2} ${4} ${5} ${6} ${7} ${UUID}" "${FSTAB[@]}")
-    elif [ "${1}" != "swap" ]; then 
-      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${2} ${4} ${5} ${6} ${7} ${UUID}")
+    if [ "$name1}" == "root" ]; then
+      FSTAB=("${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${UUID}" "${FSTAB[@]}")
+    elif [ "${name}" != "swap" ]; then 
+      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${UUID}")
     fi
 
     if [ -n "${VGNAME}" ]; then
@@ -220,26 +219,26 @@ EOF
 EOF
   
       # Informs kernel of partition table changes
-      ${PARTPROBE}
+      ${PARTPROBE}; sleep 1
   
       # Create Physical Volume (VGNAME)
-      ${PVCREATE} ${DEVICE}${id}
+      ${PVCREATE} --force ${DEVICE}${id}
       ${VGCREATE} ${VGNAME} ${DEVICE}${id}
   
       # Create and format Logical Volume (LVNAME)
       for lvname in "${PART[@]}"; do
-        set $lvname
-        if [ "${1}" != "boot" ]; then
-          ${LVCREATE} -n ${1} -L ${3} ${VGNAME}
-          if [ "${1}" == "swap" ]; then
-            ${MKSWAP} -L ${1} /dev/mapper/${VGNAME}-${1}
+        IFS=$' ' read name mount size type options dump pass <<< "${lvname}"
+        if [ "${name}" != "boot" ]; then
+          ${LVCREATE} -n ${name} -L ${size} ${VGNAME}
+          if [ "${name}" == "swap" ]; then
+            ${MKSWAP} -L ${name} /dev/mapper/${VGNAME}-${name}
           else
-            ${MKE2FS} -F -t ${4} -L ${1} /dev/mapper/${VGNAME}-${1}; 
+            ${MKE2FS} -F -t ${type} -L ${name} /dev/mapper/${VGNAME}-${name}; 
             
-            if [ "${1}" == "root" ]; then
-              FSTAB=("/dev/mapper/${VGNAME}-${1} ${2} ${4} ${5} ${6} ${7}" "${FSTAB[@]}")
+            if [ "${name}" == "root" ]; then
+              FSTAB=("/dev/mapper/${VGNAME}-${name} ${mount} ${type} ${options} ${dump} ${pass}" "${FSTAB[@]}")
             else 
-              FSTAB=("${FSTAB[@]}" "/dev/mapper/${VGNAME}-${1} ${2} ${4} ${5} ${6} ${7}")
+              FSTAB=("${FSTAB[@]}" "/dev/mapper/${VGNAME}-${name} ${mount} ${type} ${options} ${dump} ${pass}")
             fi
           fi
         fi
@@ -263,6 +262,9 @@ for fstab in "${FSTAB[@]}"; do
   ${MKDIR} -p ${DEST_PATH}${mount}
   ${MOUNT} ${device} ${DEST_PATH}${mount}
 done
+
+# Add grub-common and grub2-common packages
+INCLUDE=${INCLUDE},grub-common,grub2-common
 
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
 
@@ -361,7 +363,7 @@ ${GRUB_MKCONFIG} -o /boot/grub/grub.cfg
 #${DPKG_RECONFIGURE} locales
 
 # Create a password for root
-#${PASSWD}
+#${ECHO} root:${ROOT_PASSWD} | ${CHPASSWD}
 
 # Quit the chroot environment
 exit
@@ -369,7 +371,7 @@ EOF
 ${CHMOD} +x ${DEST_PATH}/chroot.sh
 
 # Entering the chroot environment
-${FAKECHROOT} ${CHROOT} ${DEST_PATH} ./chroot.sh 
+${CHROOT} ${DEST_PATH} ./chroot.sh 
 
 # Remove "chroot" script
 ${RM} ${DEST_PATH}/chroot.sh
