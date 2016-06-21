@@ -9,7 +9,6 @@ MOUNT=/bin/mount
 PWD=/bin/pwd
 RM=/bin/rm
 SED=/bin/sed
-UMOUNT=/bin/umount
 
 BLKID=/sbin/blkid
 FDISK=/sbin/fdisk
@@ -18,7 +17,6 @@ MKSWAP=/sbin/mkswap
 MKE2FS=/sbin/mke2fs
 PARTPROBE=/sbin/partprobe
 PVCREATE=/sbin/pvcreate
-VGCHANGE=/sbin/vgchange
 VGCREATE=/sbin/vgcreate
 
 APT_GET=/usr/bin/apt-get
@@ -29,7 +27,7 @@ FAKECHROOT=/usr/bin/fakechroot
 FIND=/usr/bin/find
 GRUB_INSTALL=/usr/sbin/grub-install
 GRUB_MKCONFIG=/usr/sbin/grub-mkconfig
-#CHPASSWD=/usr/sbin/chpasswd
+CHPASSWD=/usr/sbin/chpasswd
 
 USAGE="$(basename "${0}") [options] [DEVICE] TARGET SUITE\n\n
 \t\tDEVICE\t\n
@@ -263,9 +261,6 @@ for fstab in "${FSTAB[@]}"; do
   ${MOUNT} ${device} ${DEST_PATH}${mount}
 done
 
-# Add grub-common and grub2-common packages
-INCLUDE=${INCLUDE},grub-common,grub2-common
-
 ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
 
 # Remplace symbolic link
@@ -363,7 +358,7 @@ ${GRUB_MKCONFIG} -o /boot/grub/grub.cfg
 #${DPKG_RECONFIGURE} locales
 
 # Create a password for root
-#${ECHO} root:${ROOT_PASSWD} | ${CHPASSWD}
+${ECHO} root:${ROOT_PASSWD} | ${CHPASSWD}
 
 # Quit the chroot environment
 exit
@@ -375,12 +370,5 @@ ${CHROOT} ${DEST_PATH} ./chroot.sh
 
 # Remove "chroot" script
 ${RM} ${DEST_PATH}/chroot.sh
-
-# Unbinding the virtual filesystems
-#${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
-
-#if [ -n "${VGNAME}" ]; then
-#  ${VGCHANGE} -a n
-#fi
 
 exit 0
