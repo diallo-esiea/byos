@@ -355,7 +355,13 @@ ${GRUB_MKCONFIG} -o /boot/grub/grub.cfg
 
 # Configure locale
 #export LANG=fr_FR.UTF-8
-#${DPKG_RECONFIGURE} locales
+#${ECHO} "fr_FR.UTF-8 UTF-8" > /etc/locale.gen
+#$(ECHO} `LANG="fr_FR.UTF-8"` > /etc/default/locale
+#${DPKG_RECONFIGURE} --frontend=noninteractive locales
+
+# Configure timezone
+${ECHO} "Europe/Paris" > /etc/timezone    
+${DPKG_RECONFIGURE} --frontend=noninteractive tzdata
 
 # Create a password for root
 ${ECHO} root:${ROOT_PASSWD} | ${CHPASSWD}
