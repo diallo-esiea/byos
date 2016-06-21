@@ -4,7 +4,6 @@ CAT=/bin/cat
 CHMOD=/bin/chmod
 CP=/bin/cp
 ECHO=/bin/echo
-LN=/bin/ln
 MKDIR=/bin/mkdir
 PRINTF=printf
 PWD=/bin/pwd
@@ -177,9 +176,6 @@ if [ -n "${GIT_PATH}" ]; then
 
   # Checkout a branch version
   ${GIT} checkout v${KERNEL_VERSION}
-  
-  # Copy config file
-  ${CP} ${CONF_FILE} ./.config
 else
   KERNEL_NAME=linux-${KERNEL_VERSION}
   KERNEL_TAR=${KERNEL_NAME}.tar
@@ -231,9 +227,6 @@ else
     ${TAR} -xf ${KERNEL_TAR} -C ${TMP_PATH}
   fi
 
-  # Copy config file
-  ${CP} ${CONF_FILE} ${KERNEL_NAME}/.config
-  
   pushd ${TMP_PATH}/${KERNEL_NAME} > /dev/null || exit 1
 fi
 
@@ -260,6 +253,13 @@ else
   INSTALL_PATH=${DEST_PATH}
 fi
 
+# Define and create output directory
+export KBUILD_OUTPUT=${INSTALL_PATH}/usr/src
+${MKDIR} -p ${KBUILD_OUTPUT}
+  
+# Copy config file
+${CP} ${CONF_FILE} ${KBUILD_OUTPUT}/.config
+  
 # Build and install kernel
 ${MKDIR} -p ${INSTALL_PATH}/boot
 ${MAKE} --jobs=$((NB_CORES+1)) --load-average=${NB_CORES}
@@ -277,8 +277,6 @@ popd > /dev/null
 # Replace symbolic link
 ${RM} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/build
 ${RM} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/source
-${LN} -sf /usr/src/${KERNEL_NAME} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/build
-${LN} -sf /usr/src/${KERNEL_NAME} ${INSTALL_PATH}/lib/modules/${KERNEL_VERSION}/source
 
 # Create Debian package 
 if [ -n "${DEB}" ]; then
