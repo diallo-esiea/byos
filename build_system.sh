@@ -9,14 +9,18 @@ MOUNT=/bin/mount
 PWD=/bin/pwd
 RM=/bin/rm
 SED=/bin/sed
+UMOUNT=/bin/umount
 
 BLKID=/sbin/blkid
 FDISK=/sbin/fdisk
+LOCALE_GEN=/usr/sbin/locale-gen
+LOCALE_UPDATE=/usr/sbin/update-locale
 LVCREATE=/sbin/lvcreate
 MKSWAP=/sbin/mkswap
 MKE2FS=/sbin/mke2fs
 PARTPROBE=/sbin/partprobe
 PVCREATE=/sbin/pvcreate
+VGCHANGE=/sbin/vgchange
 VGCREATE=/sbin/vgcreate
 
 APT_GET=/usr/bin/apt-get
@@ -92,6 +96,9 @@ fi
 if [ -z "${DEST_PATH}" ]; then
   DEST_PATH=${TARGET}
 fi
+
+# Add Grub, Grub2 and locale packages
+INCLUDE=${INCLUDE},grub-common,grub2,grub2-common,locales
 
 # Convert relative path to absolute path
 for i in DEST_PATH; do 
@@ -188,19 +195,21 @@ EOF
     fi
 
     # Format partition
-    ${MKE2FS} -F -t ${type} -L ${name} ${DEVICE}${id}; 
+    ${MKE2FS} -F -t ${type} -L ${name} ${DEVICE}${id} 
 
     # Get UUID
-    UUID=$(${BLKID} ${DEVICE}${id})
-    UUID=${UUID#*UUID=\"}
-    UUID=${UUID%%\"*}
+    uuid=$(${BLKID} ${DEVICE}${id})
+    uuid=${uuid#*UUID=\"}
+    uuid=${uuid%%\"*}
 
+    # Fill filesystem table FSTAB
     if [ "${name}" == "root" ]; then
-      FSTAB=("${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${UUID}" "${FSTAB[@]}")
+      FSTAB=("${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${uuid}" "${FSTAB[@]}")
     elif [ "${name}" != "swap" ]; then 
-      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${UUID}")
+      FSTAB=("${FSTAB[@]}" "${DEVICE}${id} ${mount} ${type} ${options} ${dump} ${pass} ${uuid}")
     fi
 
+    # Manage Volume Group (LVM)
     if [ -n "${VGNAME}" ]; then
       # Increment partition number
       id=`expr ${id} + 1`
@@ -233,6 +242,7 @@ EOF
           else
             ${MKE2FS} -F -t ${type} -L ${name} /dev/mapper/${VGNAME}-${name}; 
             
+            # Fill filesystem table FSTAB
             if [ "${name}" == "root" ]; then
               FSTAB=("/dev/mapper/${VGNAME}-${name} ${mount} ${type} ${options} ${dump} ${pass}" "${FSTAB[@]}")
             else 
@@ -261,7 +271,12 @@ for fstab in "${FSTAB[@]}"; do
   ${MOUNT} ${device} ${DEST_PATH}${mount}
 done
 
-${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
+# Install Debian base system
+if [ -n "${EXCLUDE}" ]; then
+  ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --exclude=${EXCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
+else
+  ${FAKECHROOT} fakeroot ${DEBOOTSTRAP} --arch=${ARCH} --include=${INCLUDE} --variant=${VARIANT} ${SUITE} ${DEST_PATH} ${MIRROR}
+fi
 
 # Remplace symbolic link
 IFS=$'\n'
@@ -324,6 +339,7 @@ ${CAT} > ${DEST_PATH}/etc/fstab << EOF
 EOF
 
 for fstab in "${FSTAB[@]}"; do
+  unset uuid
   IFS=$' ' read device mount type options dump pass uuid <<< "${fstab}"
 
   # Check if UUID is available
@@ -354,10 +370,9 @@ ${GRUB_INSTALL} ${DEVICE}
 ${GRUB_MKCONFIG} -o /boot/grub/grub.cfg
 
 # Configure locale
-#export LANG=fr_FR.UTF-8
-#${ECHO} "fr_FR.UTF-8 UTF-8" > /etc/locale.gen
-#$(ECHO} `LANG="fr_FR.UTF-8"` > /etc/default/locale
-#${DPKG_RECONFIGURE} --frontend=noninteractive locales
+${SED} -i "s/^# fr_FR/fr_FR/" /etc/locale.gen
+${LOCALE_GEN}
+${LOCALE_UPDATE} LANG=fr_FR.UTF-8
 
 # Configure timezone
 ${ECHO} "Europe/Paris" > /etc/timezone    
@@ -376,5 +391,20 @@ ${CHROOT} ${DEST_PATH} ./chroot.sh
 
 # Remove "chroot" script
 ${RM} ${DEST_PATH}/chroot.sh
+
+# Unbinding the virtual filesystems
+${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
+
+# Umount all partitions
+for (( index=${#FSTAB[@]}-1 ; index>=0 ; index-- )) ; do
+  IFS=$' ' read device mount type options dump pass uuid <<< "${FSTAB[index]}"
+
+  ${UMOUNT} ${DEST_PATH}${mount}
+done
+
+# Deactivate Volume Group (LVM)
+if [ -n "${VGNAME}" ]; then
+  ${VGCHANGE} -a n ${VGNAME}
+fi
 
 exit 0
