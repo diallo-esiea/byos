@@ -1,6 +1,7 @@
 #!/bin/bash -xv
 
 CAT=/bin/cat
+CP=/bin/cp
 CHMOD=/bin/chmod
 ECHO=/bin/echo
 LN=/bin/ln
@@ -44,6 +45,7 @@ USAGE="$(basename "${0}") [options] [DEVICE] TARGET SUITE\n\n
 \t\t-i=PATH, --include=PATH\tComma separated list of packages which will be added to download and extract lists\n
 \t\t-m=PATH, --mirror=PATH\tCan be an http:// URL, a file:/// URL, or an ssh:/// URL\n
 \t\t-p=PATH, --path=PATH\tPath to install system (default=./TARGET)\n
+\t\t-s=FILE, --fstab=FILE\tFSTAB output file\n
 \t\t-v=VAR, --variant=VAR\tName of the bootstrap script variant to use (minbase, buildd, fakechroot, scratchbox)"
 
 # Manage options 
@@ -69,6 +71,11 @@ for i in "$@"; do
 
       # Parse configuration file
       source ${FILE}
+      shift
+      ;;
+
+    -s=*|--fstab=*)
+      FSTAB_FILE="${i#*=}"
       shift
       ;;
 
@@ -101,7 +108,7 @@ fi
 INCLUDE=${INCLUDE},grub-common,grub2,grub2-common,locales
 
 # Convert relative path to absolute path
-for i in DEST_PATH; do 
+for i in DEST_PATH FSTAB_FILE; do 
   if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
     eval ${i}=`${PWD}`/${!i}
   fi
@@ -391,6 +398,11 @@ ${CHROOT} ${DEST_PATH} ./chroot.sh
 
 # Remove "chroot" script
 ${RM} ${DEST_PATH}/chroot.sh
+
+# Copy fstab file
+if [ -n "${FSTAB_FILE}" ]; then
+  ${CP} ${DEST_PATH}/etc/fstab ${FSTAB_FILE}
+fi
 
 # Unbinding the virtual filesystems
 ${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
