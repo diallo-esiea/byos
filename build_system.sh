@@ -121,7 +121,7 @@ if [ -n "${PART}" ]; then
 
   # Get partition informations
   for part in "${PART[@]}"; do
-    IFS=$' ' read name mount size type options dump pass <<< "${part}"
+    IFS=$' \t' read name mount size type options dump pass <<< "${part}"
   
     if [ -n "${VGNAME}" ]; then
       if [ "${name}" != "boot" ]; then
@@ -241,7 +241,7 @@ EOF
   
       # Create and format Logical Volume (LVNAME)
       for lvname in "${PART[@]}"; do
-        IFS=$' ' read name mount size type options dump pass <<< "${lvname}"
+        IFS=$' \t' read name mount size type options dump pass <<< "${lvname}"
         if [ "${name}" != "boot" ]; then
           ${LVCREATE} -n ${name} -L ${size} ${VGNAME}
           if [ "${name}" == "swap" ]; then
@@ -272,7 +272,7 @@ fi
 
 # Mount all partitions
 for fstab in "${FSTAB[@]}"; do
-  IFS=$' ' read device mount type options dump pass uuid <<< "${fstab}"
+  IFS=$' \t' read device mount type options dump pass uuid <<< "${fstab}"
 
   ${MKDIR} -p ${DEST_PATH}${mount}
   ${MOUNT} ${device} ${DEST_PATH}${mount}
@@ -289,7 +289,7 @@ fi
 IFS=$'\n'
 LINKS=$(${FIND} ${DEST_PATH} -type l -lname "${DEST_PATH}*" -printf "%l\t%p\n")
 for link in ${LINKS}; do
-  IFS=$'\t' read path name <<< "$link"
+  IFS=$' \t' read path name <<< "$link"
   ${LN} -sfn ${path#${DEST_PATH}*} ${name}
 done
 
@@ -347,7 +347,7 @@ EOF
 
 for fstab in "${FSTAB[@]}"; do
   unset uuid
-  IFS=$' ' read device mount type options dump pass uuid <<< "${fstab}"
+  IFS=$' \t' read device mount type options dump pass uuid <<< "${fstab}"
 
   # Check if UUID is available
   if [ -n "${uuid}" ]; then
@@ -409,7 +409,7 @@ ${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
 
 # Umount all partitions
 for (( index=${#FSTAB[@]}-1 ; index>=0 ; index-- )) ; do
-  IFS=$' ' read device mount type options dump pass uuid <<< "${FSTAB[index]}"
+  IFS=$' \t' read device mount type options dump pass uuid <<< "${FSTAB[index]}"
 
   ${UMOUNT} ${DEST_PATH}${mount}
 done
