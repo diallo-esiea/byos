@@ -10,6 +10,7 @@ MOUNT=/bin/mount
 PWD=/bin/pwd
 RM=/bin/rm
 SED=/bin/sed
+SYSTEMCTL=/bin/systemctl
 UMOUNT=/bin/umount
 
 BLKID=/sbin/blkid
@@ -104,7 +105,7 @@ if [ -z "${DEST_PATH}" ]; then
 fi
 
 # Add Grub, Grub2 and locale packages
-INCLUDE=${INCLUDE},grub-common,grub2,grub2-common,locales
+INCLUDE=${INCLUDE},grub-common,grub2,grub2-common,systemd,systemd-sysv,initramfs-tools,isc-dhcp-client,locales
 
 # Convert relative path to absolute path
 for i in DEST_PATH; do 
@@ -318,6 +319,15 @@ EOF
 # Set the hostname
 ${ECHO} ${HOSTNAME} > ${DEST_PATH}/etc/hostname
 
+# Set basic configuration for an IPv4 DHCP
+${CAT} > ${DEST_PATH}/etc/systemd/network/wired.network << EOF
+[Match]
+Name=en*
+
+[Network]
+DHCP=ipv4
+EOF
+
 ${CAT} > ${DEST_PATH}/etc/apt/sources.list << EOF
 deb ${MIRROR} ${SUITE} main contrib non-free
 deb-src ${MIRROR} ${SUITE} main contrib non-free
@@ -369,7 +379,7 @@ ${MOUNT} -t proc none ${DEST_PATH}/proc
 ${MOUNT} -t sysfs none ${DEST_PATH}/sys
 
 # Create "chroot" script
-${CAT} >> ${DEST_PATH}/chroot.sh << EOF
+${CAT} > ${DEST_PATH}/chroot.sh << EOF
 #!/bin/bash
 # Install Grub
 ${GRUB_INSTALL} ${DEVICE}
@@ -386,6 +396,9 @@ ${DPKG_RECONFIGURE} --frontend=noninteractive tzdata
 
 # Create a password for root
 ${ECHO} root:${ROOT_PASSWD} | ${CHPASSWD}
+
+# Enable systemd-networkd.service
+${SYSTEMCTL} enable systemd-networkd
 
 # Quit the chroot environment
 exit
