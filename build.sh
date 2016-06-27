@@ -11,6 +11,7 @@ RM=/bin/rm
 UMOUNT=/bin/umount
 
 BLKID=/sbin/blkid
+VGCHANGE=/sbin/vgchange
 
 CHROOT=/usr/sbin/chroot
 UPDATE_GRUB=/usr/sbin/update-grub
@@ -85,7 +86,14 @@ if [ $? -ne 0 ]; then
 fi
 
 # Mount rootfs partition
-${MOUNT} $(${BLKID} -L root) ${DEST_PATH}
+if [ -n "${VGNAME}" ]; then
+  # Activate Volume Group (LVM)
+  ${VGCHANGE} -a y ${VGNAME}
+
+  ${MOUNT} /dev/mapper/${VGNAME}-root ${DEST_PATH}
+else
+  ${MOUNT} $(${BLKID} -L root) ${DEST_PATH}
+fi
 
 # Reset FSTAB
 unset FSTAB
@@ -170,5 +178,10 @@ for (( index=${#FSTAB[@]}-1 ; index>=0 ; index-- )) ; do
 
   ${UMOUNT} ${DEST_PATH}${mount}
 done
+
+# Deactivate Volume Group (LVM)
+if [ -n "${VGNAME}" ]; then
+  ${VGCHANGE} -a n ${VGNAME}
+fi
 
 exit 0
