@@ -73,6 +73,11 @@ for i in "$@"; do
       shift
       ;;
 
+    -p=*|--path=*)
+      DEST_PATH="${i#*=}"
+      shift
+      ;;
+
     -*|--*) # unknown option
       ${ECHO} -e ${USAGE}
       exit 1
