@@ -138,7 +138,7 @@ ${MOUNT} -t proc none ${DEST_PATH}/proc
 ${MOUNT} -t sysfs none ${DEST_PATH}/sys
 
 # Build Kernel
-./build_kernel.sh -f=${FILE} -p=${DEST_PATH} ${CONF_FILE} ${KERNEL_VERSION}
+./build_kernel.sh -f=${FILE} -p=${DEST_PATH} ${KERNEL_CONF} ${KERNEL_VERSION}
 
 # Check if build kernel succeeded
 if [ $? -ne 0 ]; then

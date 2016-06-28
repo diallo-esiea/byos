@@ -57,11 +57,6 @@ for i in "$@"; do
         esac
       ;;
 
-    -c=*|--conf=*)
-      CONF_FILE="${i#*=}"
-      shift
-      ;;
-
     -d|--deb)
       DEB=1
       ;;
@@ -137,13 +132,13 @@ if [ $# -ne 2 ]; then
 fi
 
 # Linux kernel config file
-CONF_FILE=$1
+KERNEL_CONF=$1
 
 # Kernel version to build
 KERNEL_VERSION=$2
 
 # Convert relative path to absolute path
-for i in CONF_FILE DEST_PATH GRSEC_PATCH KERNEL_PATH TMP_PATH; do 
+for i in DEST_PATH GRSEC_PATCH KERNEL_CONF KERNEL_PATH TMP_PATH; do 
   if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
     eval $i=`${PWD}`/${!i}
   fi
@@ -258,7 +253,7 @@ export KBUILD_OUTPUT=${INSTALL_PATH}/usr/src
 ${MKDIR} -p ${KBUILD_OUTPUT}
   
 # Copy config file
-${CP} ${CONF_FILE} ${KBUILD_OUTPUT}/.config
+${CP} ${KERNEL_CONF} ${KBUILD_OUTPUT}/.config
   
 # Build and install kernel
 ${MKDIR} -p ${INSTALL_PATH}/boot
