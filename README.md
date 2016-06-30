@@ -14,6 +14,6 @@ Configuring your own system requires knowing what you want.
 
 ## Task lists
 
-[ ] Check if packages are available
-[ ] Redirect all messages (errors, outputs, etc.) into one or more files
-[ ] Check if gcc plugin is available (for GRSEC)
+- [ ] Check if packages are available
+- [ ] Redirect all messages (errors, outputs, etc.) into one or more files
+- [ ] Check if gcc plugin is available (for GRSEC)
