@@ -9,7 +9,7 @@ Configuring your own system requires knowing what you want.
 ## Usage
 
 ```
-./build.sh --file=debian_sid-kernel_4.3.5.conf [DEVICE]
+./byos.sh --file=debian_sid-kernel_4.3.5.conf [DEVICE]
 ```
 
 ## Task lists
