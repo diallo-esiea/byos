@@ -205,15 +205,13 @@ else
     # Initialize GPG keyrings
     ${PRINTF} "" | ${GPG}
     
-    # Initialize GPG keyrings
-    ${PRINTF} "" | ${GPG}
-    
     # Download GPG keys
+    GPG_KEYSERVER=keyserver.ubuntu.com 
     GPG_KEY=`${GPG} --verify ${KERNEL_TAR}.sign 2>&1 | \
              ${AWK} '{print $NF}' | \
              ${SED} -n '/\([0-9]\|[A-H]\)$/p' | \
              ${SED} -n '1p'`
-    ${GPG} --recv-keys ${GPG_KEY}
+    ${GPG} --keyserver ${GPG_KEYSERVER} --recv-keys ${GPG_KEY}
     
     # Verify kernel archive against signature file
     ${GPG} --verify ${KERNEL_TAR}.sign
@@ -249,7 +247,8 @@ else
 fi
 
 # Define and create output directory
-export KBUILD_OUTPUT=${INSTALL_PATH}/usr/src
+#export KBUILD_OUTPUT=${INSTALL_PATH}/usr/src
+export KBUILD_OUTPUT=${TMP_PATH}/kernel-build-${KERNEL_VERSION}
 ${MKDIR} -p ${KBUILD_OUTPUT}
   
 # Copy config file
@@ -327,6 +326,7 @@ if [ -z "${NO_DELETE}" ]; then
   fi
 
   ${RM} -rf ${KERNEL_NAME}
+  ${RM} -rf ${KBUILD_OUTPUT}
 fi
 
 popd > /dev/null
