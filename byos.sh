@@ -17,8 +17,12 @@ CHROOT=/usr/sbin/chroot
 UPDATE_GRUB=/usr/sbin/update-grub
 UPDATE_INITRAMFS=/usr/sbin/update-initramfs
 
-USAGE="$(basename "${0}") [options] DEVICE\n
+USAGE="$(basename "${0}") [options] <command> DEVICE\n
 \t\tDEVICE\tTarget device name\n
+\tcommand:\n
+\t--------\n
+\t\tbuild\tBuild a whole system\n
+\t\tupdate\tUpdate kernel\n
 \toptions:\n
 \t--------\n
 \t\t-f=FILE, --file=FILE\tConfiguration file\n
@@ -58,8 +62,10 @@ for i in "$@"; do
   esac
 done
 
-if [ $# -eq 1 ]; then
-  DEVICE=${1}
+if [ $# -eq 2 ] && 
+   ([ "${1}" == "build" ] || [ "${1}" == "update" ]); then
+  COMMAND=${1}
+  DEVICE=${2}
 else
   ${ECHO} -e ${USAGE}
   exit 1
@@ -78,11 +84,13 @@ for i in DEST_PATH; do
 done
 
 # Build system
-./build_system.sh -f=${FILE} -p=${DEST_PATH} ${DEVICE} ${TARGET} ${SUITE}
-
-# Check if build system succeeded
-if [ $? -ne 0 ]; then
-  exit 1   
+if [ "${1}" == "build" ]; then
+  ./build_system.sh -f=${FILE} -p=${DEST_PATH} ${DEVICE} ${TARGET} ${SUITE}
+  
+  # Check if build system succeeded
+  if [ $? -ne 0 ]; then
+    exit 1   
+  fi
 fi
 
 # Mount rootfs partition
@@ -137,7 +145,7 @@ ${MOUNT} --bind /dev ${DEST_PATH}/dev
 ${MOUNT} -t proc none ${DEST_PATH}/proc
 ${MOUNT} -t sysfs none ${DEST_PATH}/sys
 
-# Build Kernel
+# Build or update Kernel
 ./build_kernel.sh -f=${FILE} -p=${DEST_PATH} ${KERNEL_CONF} ${KERNEL_VERSION}
 
 # Check if build kernel succeeded
