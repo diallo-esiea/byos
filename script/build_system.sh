@@ -15,8 +15,6 @@ UMOUNT=/bin/umount
 
 BLKID=/sbin/blkid
 FDISK=/sbin/fdisk
-LOCALE_GEN=/usr/sbin/locale-gen
-LOCALE_UPDATE=/usr/sbin/update-locale
 LVCREATE=/sbin/lvcreate
 MKSWAP=/sbin/mkswap
 MKE2FS=/sbin/mke2fs
@@ -26,6 +24,7 @@ VGCHANGE=/sbin/vgchange
 VGCREATE=/sbin/vgcreate
 
 APT_GET=/usr/bin/apt-get
+CHPASSWD=/usr/sbin/chpasswd
 CHROOT=/usr/sbin/chroot
 DEBOOTSTRAP=/usr/sbin/debootstrap
 DPKG_RECONFIGURE=/usr/sbin/dpkg-reconfigure
@@ -33,7 +32,8 @@ FAKECHROOT=/usr/bin/fakechroot
 FIND=/usr/bin/find
 GRUB_INSTALL=/usr/sbin/grub-install
 GRUB_MKCONFIG=/usr/sbin/grub-mkconfig
-CHPASSWD=/usr/sbin/chpasswd
+LOCALE_GEN=/usr/sbin/locale-gen
+LOCALE_UPDATE=/usr/sbin/update-locale
 
 USAGE="$(basename "${0}") [options] [DEVICE] TARGET SUITE\n\n
 \t\tDEVICE\t\n

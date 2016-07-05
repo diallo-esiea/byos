@@ -126,32 +126,18 @@ for i in "$@"; do
   esac
 done
 
-if [ $# -ne 2 ]; then
+if [ $# -eq 2 ]; then
+  KERNEL_CONF=${1}
+  KERNEL_VERSION=${2}
+else
   ${ECHO} -e ${USAGE}
   exit 1
 fi
 
-# Linux kernel config file
-KERNEL_CONF=$1
-
-# Kernel version to build
-KERNEL_VERSION=$2
-
-# Convert relative path to absolute path
-for i in DEST_PATH GRSEC_PATCH KERNEL_CONF KERNEL_PATH TMP_PATH; do 
-  if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
-    eval $i=`${PWD}`/${!i}
-  fi
-done
-
 # Assign default value in case of no option
 if [ -z "${DEST_PATH}" ]; then
   DEST_PATH=/
-else
-  # Create DEST_PATH if not exists 
-  ${MKDIR} -p ${DEST_PATH}
 fi
-
 if [ -z "${TMP_PATH}" ]; then
   if [ -d /tmp ]; then
     TMP_PATH=/tmp
@@ -160,6 +146,16 @@ if [ -z "${TMP_PATH}" ]; then
     exit 1
   fi
 fi
+
+# Convert relative path to absolute path
+for i in DEST_PATH GRSEC_PATCH KERNEL_CONF KERNEL_PATH TMP_PATH; do 
+  if [[ -n "${!i}" ]] && [[ ${!i} != /* ]]; then
+    eval $i=`${PWD}`/${!i}
+  fi
+done
+
+# Create DEST_PATH if not exists 
+${MKDIR} -p ${DEST_PATH}
 
 pushd ${TMP_PATH} > /dev/null || exit 1
 
@@ -247,7 +243,6 @@ else
 fi
 
 # Define and create output directory
-#export KBUILD_OUTPUT=${INSTALL_PATH}/usr/src
 export KBUILD_OUTPUT=${TMP_PATH}/kernel-build-${KERNEL_VERSION}
 ${MKDIR} -p ${KBUILD_OUTPUT}
   
