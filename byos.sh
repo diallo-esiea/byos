@@ -596,6 +596,9 @@ build_system() {
     DEBOOTSTRAP_OPTIONS="${DEBOOTSTRAP_OPTIONS} --exclude=${EXCLUDE}"
   fi
   ${DEBOOTSTRAP} ${DEBOOTSTRAP_OPTIONS} ${SUITE} ${DEST_PATH} ${MIRROR}
+  if [ $? -ne 0 ]; then
+    return 1
+  fi
 
   # Remplace symbolic link
   IFS=$'\n'
