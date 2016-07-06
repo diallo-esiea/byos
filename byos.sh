@@ -283,7 +283,7 @@ EOF
     ${PARTPROBE}; sleep 1
  
     # Set bootable partition
-    if [ "$1" == "boot" ]; then
+    if [ "${name}" == "boot" ]; then
       ${SED} -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | ${FDISK} ${DEVICE}
 a       # make a partition bootable
 ${size} # partion number
