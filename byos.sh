@@ -46,6 +46,8 @@ UPDATE_GRUB=/usr/sbin/update-grub
 UPDATE_INITRAMFS=/usr/sbin/update-initramfs
 WGET=/usr/bin/wget
 
+NB_CORES=$(grep -c '^processor' /proc/cpuinfo)
+
 # Default value 
 DEST_PATH=byos
 SUITE=stable
@@ -470,6 +472,11 @@ build_kernel() {
   if [ -n "${GRSEC_PATCH}" ]; then
     ${PATCH} -p1 < ${GRSEC_PATCH}
     
+    # Check if kernel patching succeeded
+    if [ $? -ne 0 ]; then
+      return 1   
+    fi
+
     # Configuring kernel with Grsecurity
     # Grsecurity configuration options 
     # cf. https://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options
