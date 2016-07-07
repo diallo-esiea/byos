@@ -9,8 +9,8 @@ Configuring your own system requires knowing what you want.
 ## Usage
 
 ```
-./byos.sh --file=config/debian.conf [DEVICE] config/config-4.3.5 4.3.5
-./byos.sh --file=config/debian.conf --grsec=grsecurity/grsecurity-3.1-4.3.5-201602092235.patch [DEVICE] config/config-4.3.5-grsec 4.3.5
+./byos.sh --file=config/debian.conf build [DEVICE] config/config-4.3.5 4.3.5
+./byos.sh --file=config/debian.conf --grsec=grsecurity/grsecurity-3.1-4.3.5-201602092235.patch update [DEVICE] config/config-4.3.5-grsec 4.3.5
 ```
 
 ## Task lists
