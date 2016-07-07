@@ -477,16 +477,26 @@ build_kernel() {
       return 1   
     fi
 
+    # Copy config file
+    ${CP} ${KERNEL_CONF} .config
+    
     # Configuring kernel with Grsecurity
     # Grsecurity configuration options 
     # cf. https://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options
     ${MAKE} ${ALT}
   
-    # Update KERNEL_VERSION 
+    # Update KERNEL_VERSION and KERNEL_CONF
     KERNEL_VERSION=${KERNEL_VERSION}-grsec
+    KERNEL_CONF=`${PWD}`/.config
   elif [ -n "${ALT}" ]; then
+    # Copy config file
+    ${CP} ${KERNEL_CONF} .config
+    
     # Configuring kernel
     ${MAKE} ${ALT}
+
+    # Update KERNEL_CONF
+    KERNEL_CONF=`${PWD}`/.config
   fi
   
   # Define install folder

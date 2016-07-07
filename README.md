@@ -9,7 +9,8 @@ Configuring your own system requires knowing what you want.
 ## Usage
 
 ```
-./byos.sh --file=debian_sid-kernel_4.3.5.conf [DEVICE]
+./byos.sh --file=config/debian.conf [DEVICE] config/config-4.3.5 4.3.5
+./byos.sh --file=config/debian.conf --grsec=grsecurity/grsecurity-3.1-4.3.5-201602092235.patch [DEVICE] config/config-4.3.5-grsec 4.3.5
 ```
 
 ## Task lists
