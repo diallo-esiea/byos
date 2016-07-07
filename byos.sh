@@ -483,7 +483,7 @@ build_kernel() {
     # Configuring kernel with Grsecurity
     # Grsecurity configuration options 
     # cf. https://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options
-    ${MAKE} ${ALT}
+    ${MAKE} --jobs=$((NB_CORES+1)) --load-average=${NB_CORES} ${ALT}
   
     # Update KERNEL_VERSION and KERNEL_CONF
     KERNEL_VERSION=${KERNEL_VERSION}-grsec
