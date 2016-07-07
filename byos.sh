@@ -468,6 +468,13 @@ build_kernel() {
     pushd ${TMP_PATH}/${KERNEL_NAME} > /dev/null || exit 1
   fi
   
+  # Define and create output directory
+  export KBUILD_OUTPUT=${TMP_PATH}/kernel-build-${KERNEL_VERSION}
+  ${MKDIR} -p ${KBUILD_OUTPUT}
+    
+  # Copy config file
+  ${CP} ${KERNEL_CONF} ${KBUILD_OUTPUT}/.config
+    
   # Patching kernel with grsecurity
   if [ -n "${GRSEC_PATCH}" ]; then
     ${PATCH} -p1 < ${GRSEC_PATCH}
@@ -477,26 +484,16 @@ build_kernel() {
       return 1   
     fi
 
-    # Copy config file
-    ${CP} ${KERNEL_CONF} .config
-    
     # Configuring kernel with Grsecurity
     # Grsecurity configuration options 
     # cf. https://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options
     ${MAKE} --jobs=$((NB_CORES+1)) --load-average=${NB_CORES} ${ALT}
   
-    # Update KERNEL_VERSION and KERNEL_CONF
+    # Update KERNEL_VERSION
     KERNEL_VERSION=${KERNEL_VERSION}-grsec
-    KERNEL_CONF=`${PWD}`/.config
   elif [ -n "${ALT}" ]; then
-    # Copy config file
-    ${CP} ${KERNEL_CONF} .config
-    
     # Configuring kernel
     ${MAKE} ${ALT}
-
-    # Update KERNEL_CONF
-    KERNEL_CONF=`${PWD}`/.config
   fi
   
   # Define install folder
@@ -506,13 +503,6 @@ build_kernel() {
     INSTALL_PATH=${DEST_PATH}
   fi
   
-  # Define and create output directory
-  export KBUILD_OUTPUT=${TMP_PATH}/kernel-build-${KERNEL_VERSION}
-  ${MKDIR} -p ${KBUILD_OUTPUT}
-    
-  # Copy config file
-  ${CP} ${KERNEL_CONF} ${KBUILD_OUTPUT}/.config
-    
   # Build and install kernel
   ${MKDIR} -p ${INSTALL_PATH}/boot
   ${MAKE} --jobs=$((NB_CORES+1)) --load-average=${NB_CORES}
