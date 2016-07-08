@@ -21,17 +21,6 @@ Update an existed whole system with Kernel 4.3.5 with Grsecurity (Grsecurity con
 ./byos.sh --alt=menuconfig --file=config/debian.conf --grsec=grsecurity/grsecurity-3.1-4.3.5-201602092235.patch update [DEVICE] config/config-4.3.5-grsec 4.3.5
 ```
 
-## Task lists
-
-- [ ] Check if packages are available
-- [ ] Redirect all messages (errors, outputs, etc.) into one or more files
-- [ ] Check if gcc plugin is available (for GRSEC)
-
-> Your gcc installation does not support plugins.  
-> If the necessary headers for plugin support are missing, they should be installed.  
-> On Debian, apt-get install gcc-<ver>-plugin-dev.  
-> If you choose to ignore this error and lessen the improvements provided by this patch, re-run make with the DISABLE_PAX_PLUGINS=y argument..
-
 ## Managing multiple compiler version
 
 Erasing current update-alternatives setup for gcc
@@ -67,6 +56,17 @@ Configuring commands for gcc to switch between x.x and x.x interactively:
 ```
 sudo update-alternatives --config gcc
 ```
+
+## Task lists
+
+- [ ] Check if packages are available
+- [ ] Redirect all messages (errors, outputs, etc.) into one or more files
+- [ ] Check if gcc plugin is available (for GRSEC)
+
+> Your gcc installation does not support plugins.  
+> If the necessary headers for plugin support are missing, they should be installed.  
+> On Debian, apt-get install gcc-<ver>-plugin-dev.  
+> If you choose to ignore this error and lessen the improvements provided by this patch, re-run make with the DISABLE_PAX_PLUGINS=y argument..
 
 ## Issue lists
 
