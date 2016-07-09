@@ -688,6 +688,11 @@ sysfs               /sys            sysfs   defaults                    0       
 tmpfs               /tmp            tmpfs   defaults                    0       0
 EOF
   
+  # Binding the virtual filesystems
+  ${MOUNT} --bind /dev ${DEST_PATH}/dev
+  ${MOUNT} -t proc none ${DEST_PATH}/proc
+  ${MOUNT} -t sysfs none ${DEST_PATH}/sys
+
   # Create "chroot" script
   ${CAT} > ${DEST_PATH}/chroot.sh << EOF
 #!/bin/bash
@@ -720,6 +725,9 @@ EOF
   
   # Remove "chroot" script
   ${RM} ${DEST_PATH}/chroot.sh
+
+  # Unbinding the virtual filesystems
+  ${UMOUNT} ${DEST_PATH}/{dev,proc,sys}
 
   return 0  
 }
