@@ -1,0 +1,905 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1348\cocoasubrtf170
+{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fnil\fcharset0 Menlo-Bold;\f2\fnil\fcharset0 Menlo-BoldItalic;
+\f3\fnil\fcharset0 Menlo-Italic;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww23640\viewh12940\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\fs22 \cf0 \CocoaLigature0 [*] 
+\f1\b 64-bit kernel\
+
+\f2\i 		
+\f3\b0 Say yes to build a 64-bit kernel - formerly known as x86_64\
+		Say no to build a 32-bit kernel - formerly known as i386\
+
+\f0\i0 	General setup  --->\
+			
+\f1\b Kernel compression mode (XZ)
+\f0\b0   --->\
+
+\f3\i 				The linux kernel is a kind of self-extracting executable.\
+				Several compression algorithms are available, which differ\
+				in efficiency, compression and decompression speed.\
+				Compression speed is only relevant when building a kernel.\
+				Decompression speed is relevant at each boot. [\'85]
+\f2\b \
+				
+\f3\b0 High compression options are mostly useful for users, who\
+				are low on disk space (embedded systems), but for whom ram\
+				size matters less. If in doubt, select 'gzip'\
+
+\f0\i0 		[*] 	
+\f1\b Support for paging of anonymous memory
+\f0\b0  (swap)\
+
+\f3\i 				This option allows you to choose whether you want to have support\
+				for so called swap devices or swap files in your kernel that are\
+				used to provide more virtual memory than the actual RAM present\
+				in your computer. If unsure say Y.\
+
+\f0\i0 		[*] 
+\f1\b 	open by fhandle syscalls
+\f0\b0 \
+
+\f3\i 				If you say Y here, a user level program will be able to map\
+				file names to handle and then later use the handle for\
+				different file system operations. This is useful in implementing\
+				userspace file servers, which now track files using handles instead\
+				of names. The handle would remain the same even if file names\
+				get renamed. Enables open_by_handle_at(2) and name_to_handle_at(2)\
+				syscalls.\
+
+\f0\i0 			Timers subsystem  --->\
+				
+\f1\b Timer tick handling (Idle dynticks system (tickless idle))  --->
+\f0\b0 \
+
+\f3\i 					This option enables a tickless idle system: timer interrupts\
+					will only trigger on an as-needed basis when the system is idle.\
+					This is usually interesting for energy saving.\
+
+\f0\i0 			CPU/Task time and stats accounting  --->\
+				
+\f1\b Cputime accounting (Simple tick based cputime accounting)  --->
+\f0\b0 \
+
+\f3\i 					This is the basic tick based cputime accounting that maintains\
+					statistics about user, system and idle time spent on per jiffies\
+					granularity. If unsure, say Y.\
+
+\f0\i0 		[*] 	
+\f1\b Kernel .config support
+\f0\b0 \
+
+\f3\i 				This option enables the complete Linux kernel ".config" file\
+				contents to be saved in the kernel. It provides documentation\
+				of which kernel options are used in a running kernel or in an\
+				on-disk kernel.  This information can be extracted from the kernel\
+				image file with the script scripts/extract-ikconfig and used as\
+				input to rebuild the current kernel or to build another kernel.\
+				It can also be extracted from a running kernel by reading\
+				/proc/config.gz if enabled (below).\
+
+\f0\i0 		(17) 
+\f1\b Kernel log buffer size (16 => 64KB, 17 => 128KB)
+\f0\b0 \
+
+\f3\i 				Select the minimal kernel log buffer size as a power of 2.\
+				The final size is affected by LOG_CPU_MAX_BUF_SHIFT config\
+				parameter, see below. Any higher size also might be forced\
+				by "log_buf_len" boot parameter.\
+					Examples:\
+						17 => 128 KB\
+						16 => 64 KB\
+						15 => 32 KB\
+						14 => 16 KB\
+						13 =>  8 KB\
+						12 =>  4 K\
+
+\f0\i0 		[*] 	
+\f1\b Control Group support
+\f0\b0   --->\
+
+\f3\i 				This option adds support for grouping sets of processes together, for\
+				use with process control subsystems such as Cpusets, CFS, memory\
+				controls or device isolation.\
+
+\f0\i0 		[*] 	
+\f1\b Initial RAM filesystem and RAM disk (initramfs/initrd) support
+\f0\b0 \
+
+\f3\i 				The initial RAM filesystem is a ramfs which is loaded by the\
+				boot loader (loadlin or lilo) and that is mounted as root\
+				before the normal boot procedure. It is typically used to\
+				load modules needed to mount the "real" root file system,\
+				etc. If RAM disk support (BLK_DEV_RAM) is also included, this\
+				also enables initial RAM disk (initrd) support and adds\
+				15 Kbytes (more on some other architectures) to the kernel size.\
+
+\f0\i0 		[*]	
+\f1\b Support initial ramdisks compressed using gzip
+\f0\b0 \
+
+\f3\i 				Support loading of a gzip encoded initial ramdisk or cpio buffer.\
+
+\f0\i0 		[*]	
+\f1\b Configure standard kernel features (expert users)
+\f0\b0   --->\
+
+\f3\i 				This option allows certain base kernel options and settings\
+				to be disabled or tweaked. This is for specialized\
+				environments which can tolerate a "non-standard" kernel.\
+				Only use this if you really know what you are doing.\
+
+\f0\i0 				[*]	
+\f1\b Multiple users, groups and capabilities support
+\f0\b0 \
+
+\f3\i 						This option enables support for non-root users, groups and\
+						capabilities. If you say N here, all processes will run \
+						with UID 0, GID 0, and all possible capabilities.  \
+						Saying N here also compiles out support for system calls\
+						related to UIDs, GIDs, and capabilities, such as setuid,\
+						setgid, and capset. If unsure, say Y here.\
+
+\f0\i0 				[*]	
+\f1\b Enable support for printk
+\f0\b0 \
+
+\f3\i 						This option enables normal printk support. Removing it\
+						eliminates most of the message strings from the kernel image\
+						and makes the kernel more or less silent. As this makes it\
+						very difficult to diagnose system problems, saying N here is\
+						strongly discouraged.\
+
+\f0\i0 				[*]	
+\f1\b Enable full-sized data structures for core
+\f0\b0 \
+
+\f3\i 						Disabling this option reduces the size of miscellaneous core\
+						kernel data structures. This saves memory on small machines,\
+						but may reduce performance.\
+
+\f0\i0 				[*]	
+\f1\b Enable futex support
+\f0\b0 \
+
+\f3\i 						Disabling this option will cause the kernel to be built without\
+						support for "fast userspace mutexes".  The resulting kernel may not\
+						run glibc-based applications correctly.\
+
+\f0\i0 				[*]	
+\f1\b Enable eventpoll support\
+
+\f3\i\b0 						Disabling this option will cause the kernel to be built without\
+						support for epoll family of system calls.\
+
+\f0\i0 				[*]	
+\f1\b Enable signalfd() system call
+\f0\b0 \
+
+\f3\i 						Enable the signalfd() system call that allows to receive signals						on a file descriptor. If unsure, say Y.\
+
+\f0\i0 				[*]	
+\f1\b Enable timerfd() system call
+\f0\b0 \
+
+\f3\i 						Enable the timerfd() system call that allows to receive timer\
+						events on a file descriptor. If unsure, say Y.\
+
+\f0\i0 				[*]	
+\f1\b Enable eventfd() system call
+\f0\b0 \
+
+\f3\i 						Enable the eventfd() system call that allows to receive both\
+						kernel notification (ie. KAIO) or userspace notifications.\
+						If unsure, say Y.\
+
+\f0\i0 		[*]	
+\f1\b Use full shmem filesystem
+\f0\b0 \
+
+\f3\i 				The shmem is an internal filesystem used to manage shared memory.\
+				It is backed by swap and manages resource limits. It is also exported\
+				to userspace as tmpfs if TMPFS is enabled. Disabling this\
+				option replaces shmem and tmpfs with the much simpler ramfs code,\
+				which may be appropriate on small systems without swap.\
+
+\f0\i0 		[*]	
+\f1\b Enable membarrier() system call\
+
+\f2\i 				
+\f3\b0 Enable the membarrier() system call that allows issuing memory\
+				barriers across all running threads, which can be used to distribute\
+				the cost of user-space memory barriers asymmetrically by transforming\
+				pairs of memory barriers into pairs consisting of membarrier() and a\
+				compiler barrier. If unsure, say Y.\
+
+\f0\i0 			Kernel Performance Events And Counters  --->\
+				
+\f1\b -*-	Kernel performance events and counters
+\f0\b0 \
+
+\f3\i 						Enable kernel support for various performance events provided						by software and hardware.\
+						Software events are supported either built-in or via the\
+						use of generic tracepoints.\
+						Most modern CPUs support performance events via performance\
+						counter registers. These registers count the number of certain\
+						types of hw events: such as instructions executed, cachemisses\
+						suffered, or branches mis-predicted - without slowing down the\
+						kernel or applications. These registers can also trigger interrupts\
+						when a threshold number of events have passed - and can thus be\
+						used to profile the code that runs on that CPU.\
+						The Linux Performance Event subsystem provides an abstraction of\
+						these software and hardware event capabilities, available via a\
+						system call and used by the "perf" utility in tools/perf/. It\
+						provides per task and per CPU counters, and it provides event\
+						capabilities on top of those. Say Y if unsure.\
+
+\f0\i0 			
+\f1\b Choose SLAB allocator (SLAB)  --->
+\f0\b0 \
+
+\f3\i 				The regular slab allocator that is established and known to work\
+				well in all environments. It organizes cache hot objects in\
+				per cpu and per node queues.\
+
+\f0\i0 			
+\f1\b Stack Protector buffer overflow detection (Regular)  --->
+\f0\b0 \
+
+\f3\i 				Functions will have the stack-protector canary logic added if they\
+				have an 8-byte or larger character array on the stack. \
+				This feature requires gcc version 4.2 or above, or a distribution\
+				gcc with the feature backported ("-fstack-protector").\
+				On an x86 "defconfig" build, this feature adds canary checks to\
+				about 3% of all kernel functions, which increases kernel code size\
+				by about 0.3%.\
+
+\f0\i0 [*] 	
+\f1\b Enable the block layer  --->
+\f0\b0 \
+
+\f3\i 		Provide block layer support for the kernel.\
+		Disable this option to remove the block layer support from the\
+		kernel. This may be useful for embedded devices.\
+		If this option is disabled:\
+			- block device files will become unusable			- some filesystems (such as ext3) will become unavailable.\
+		Also, SCSI character devices and USB storage will be disabled since\
+		they make use of various block layer definitions and facilities.\
+		Say Y here unless you know you really don't want to mount disks and		suchlike.\
+
+\f0\i0 			IO Schedulers  --->\
+						
+\f1\b Default I/O scheduler (No-op)  --->
+\f0\b0 \
+
+\f3\i 							Select the I/O scheduler which will be used by default for all\
+							block devices.\
+
+\f0\i0 	Processor type and features  --->\
+		[*]	
+\f1\b DMA memory allocation support
+\f0\b0 \
+
+\f3\i 				DMA memory allocation support allows devices with less than 32-bit\
+				addressing to allocate within the first 16MB of address space.\
+				Disable if no such devices will be used. If unsure, say Y.\
+
+\f0\i0 		[*] 	
+\f1\b Single-depth WCHAN output
+\f0\b0 \
+
+\f3\i 				Calculate simpler /proc/<PID>/wchan values. If this option\
+				is disabled then wchan values will recurse back to the\
+				caller function. This provides more accurate wchan values,\
+				at the expense of slightly more scheduling overhead.\
+				If in doubt, say "Y".\
+
+\f0\i0 			
+\f1\b Processor family (Generic-x86-64)  --->
+\f0\b0 \
+
+\f3\i 				Generic x86-64 CPU. Run equally well on all x86-64 CPUs.\
+
+\f0\i0 			
+\f1\b Preemption Model (No Forced Preemption (Server))  --->\
+
+\f2\i 				
+\f3\b0 This is the traditional Linux preemption model, geared towards\
+				throughput. It will still provide good latencies most of the\
+				time, but there are no guarantees and occasional longer delays\
+				are possible.\
+				Select this option if you are building a kernel for a server or\
+				scientific/computation system, or if you want to maximize the\
+				raw processing power of the kernel, irrespective of scheduling\
+				latencies.\
+			
+\f1\i0\b Memory model (Sparse Memory)  --->\
+
+\f2\i 				
+\f3\b0 This will be the only option for some systems, including\
+				memory hotplug systems. This is normal.\
+				For many other systems, this will be an alternative to\
+				"Discontiguous Memory". This option provides some potential\
+				performance benefits, along with decreased code complexity,\
+				but it is newer, and more experimental.\
+				If unsure, choose "Discontiguous Memory" or "Flat Memory"\
+				over this option.\
+
+\f0\i0 		
+\f1\b (65536) Low address space to protect from user allocation
+\f0\b0 \
+		
+\f1\b (64)	Amount of low memory, in kilobytes, to reserve for the BIOS
+\f0\b0 \
+			
+\f1\b Timer frequency (250 HZ)  --->
+\f0\b0 \
+		
+\f1\b (0x1000000) Physical address where the kernel is loaded
+\f0\b0 \
+		
+\f1\b (0x400000) Alignment value to which kernel should be aligned
+\f0\b0 \
+	Bus options (PCI etc.)  --->\
+		[*]	
+\f1\b PCI support
+\f0\b0 \
+
+\f3\i 				Find out whether you have a PCI motherboard. PCI is the name of a\
+				bus system, i.e. the way the CPU talks to the other stuff inside\
+				your box. Other bus systems are ISA, EISA, MicroChannel (MCA) or\
+				VESA. If you have PCI, say Y, otherwise N.\
+
+\f0\i0 		[*]	
+\f1\b Message Signaled Interrupts (MSI and MSI-X)
+\f0\b0 \
+
+\f3\i 				This allows device drivers to enable MSI (Message Signaled\
+				Interrupts).  Message Signaled Interrupts enable a device to\
+				generate an interrupt using an inbound Memory Write on its\
+				PCI bus instead of asserting a device IRQ pin.\
+				Use of PCI MSI interrupts can be disabled at kernel boot time\
+				by using the 'pci=nomsi' option. This disables MSI for the\
+				entire system. If you don't know what to do here, say Y.\
+
+\f0\i0 	Executable file formats / Emulations  --->\
+		[*]	
+\f1\b Kernel support for ELF binaries
+\f0\b0 \
+
+\f3\i 				ELF (Executable and Linkable Format) is a format for libraries and\
+				executables used across different architectures and operating\
+				systems. Saying Y here will enable your kernel to run ELF binaries\
+				and enlarge it by about 13 KB. ELF support under Linux has now all\
+				but replaced the traditional Linux a.out formats (QMAGIC and ZMAGIC)\
+				because it is portable (this does *not* mean that you will be able\
+				to run executables from different architectures or operating systems\
+				however) and makes building run-time libraries very easy. Many new\
+				executables are distributed solely in ELF format. You definitely\
+				want to say Y here.\
+
+\f0\i0 		[*] 	
+\f1\b Kernel support for scripts starting with #!
+\f0\b0 \
+
+\f3\i 				Say Y here if you want to execute interpreted scripts starting with\
+				#! followed by the path to an interpreter.\
+				You can build this support as a module; however, until that module\
+				gets loaded, you cannot run scripts.  Thus, if you want to load this\
+				module from an initramfs, the portion of the initramfs before loading\
+				this module must consist of compiled binaries only.\
+				Most systems will not boot if you say M or N here.  If unsure, say Y.\
+
+\f0\i0 [*]	
+\f1\b Networking support  --->
+\f0\b0 \
+		Networking options  --->\
+				[*]	
+\f1\b Packet socket
+\f0\b0 \
+
+\f3\i 						The Packet protocol is used by applications which communicate\
+						directly with network devices without an intermediate network\
+						protocol implemented in the kernel, e.g. tcpdump.  If you want them\
+						to work, choose Y.\
+						To compile this driver as a module, choose M here: the module will\
+						be called af_packet. If unsure, say Y.\
+
+\f0\i0 				[*]	
+\f1\b Unix domain sockets
+\f0\b0 \
+
+\f3\i 						If you say Y here, you will include support for Unix domain sockets;\
+						sockets are the standard Unix mechanism for establishing and\
+						accessing network connections.  Many commonly used programs such as\
+						the X Window system and syslog use these sockets even if your\
+						machine is not connected to any network.  Unless you are working on\
+						an embedded system or something similar, you therefore definitely\
+						want to say Y here.\
+						To compile this driver as a module, choose M here: the module will be\
+						called unix.  Note that several important services won't work\
+						correctly if you say M here and then neglect to load the module.\
+						Say Y unless you know what you are doing.\
+
+\f0\i0 				[*]	
+\f1\b TCP/IP networking
+\f0\b0 \
+
+\f3\i 						These are the protocols used on the Internet and on most local\
+						Ethernets. It is highly recommended to say Y here (this will enlarge\
+						your kernel by about 400 KB), since some programs (e.g. the X window\
+						system) use TCP/IP even if your machine is not connected to any\
+						other computer. You will get the so-called loopback device which\
+						allows you to ping yourself (great fun, that!). [\'85]\
+						Short answer: say Y.\
+
+\f0\i0 	Device Drivers  --->\
+			Generic Driver Options  --->\
+				[*]	
+\f1\b Maintain a devtmpfs filesystem to mount at /dev
+\f0\b0 \
+
+\f3\i 						This creates a tmpfs/ramfs filesystem instance early at bootup.\
+						In this filesystem, the kernel driver core maintains device\
+						nodes with their default names and permissions for all\
+						registered devices with an assigned major/minor number.\
+						Userspace can modify the filesystem content as needed, add\
+						symlinks, and apply needed permissions.\
+						It provides a fully functional /dev directory, where usually\
+						udev runs on top, managing permissions and adding meaningful\
+						symlinks.\
+						In very limited environments, it may provide a sufficient\
+						functional /dev without any further help. It also allows simple\
+						rescue systems, and reliably handles dynamic major/minor numbers.\
+
+\f0\i0 				
+\f1\b -*- 	Userspace firmware loading support
+\f0\b0 \
+
+\f3\i 						This option is provided for the case where none of the in-tree modules\
+						require userspace firmware loading support, but a module built\
+						out-of-tree does.\
+
+\f0\i0 				[*] 
+\f1\b 	Allow device coredump
+\f0\b0 \
+
+\f3\i 						This option controls if the device coredump mechanism is available or\
+						not; if disabled, the mechanism will be omitted even if drivers that\
+						can use it are enabled.\
+						Say 'N' for more sensitive systems or systems that don't want\
+						to ever access the information to not have the code, nor keep any\
+						data. If unsure, say Y.\
+
+\f0\i0 			SCSI device support  --->\
+				-*- 	
+\f1\b SCSI device support
+\f0\b0 \
+
+\f3\i 						If you want to use a SCSI hard disk, SCSI tape drive, SCSI CD-ROM or\
+						any other SCSI device under Linux, say Y and make sure that you know\
+						the name of your SCSI host adapter (the card inside your computer\
+						that "speaks" the SCSI protocol, also called SCSI controller),\
+						because you will be asked for it.\
+						You also need to say Y here if you have a device which speaks\
+						the SCSI protocol.  Examples of this include the parallel port\
+						version of the IOMEGA ZIP drive, USB storage devices, Fibre\
+						Channel, and FireWire storage.\
+
+\f0\i0 				[*] 	
+\f1\b SCSI disk support
+\f0\b0 \
+
+\f3\i 						If you want to use SCSI hard disks, Fibre Channel disks,\
+						Serial ATA (SATA) or Parallel ATA (PATA) hard disks,\
+						USB storage or the SCSI or parallel port version of\
+						the IOMEGA ZIP drive, say Y [\'85]\
+
+\f0\i0 		[*] 	
+\f1\b Serial ATA and Parallel ATA drivers (libata)  --->
+\f0\b0 \
+				[*]
+\f1\b 	AHCI SATA support
+\f0\b0 \
+
+\f3\i 						This option enables support for AHCI Serial ATA.\
+						If unsure, say N.\
+
+\f0\i0 		[*] 	
+\f1\b Multiple devices driver support (RAID and LVM)  --->
+\f0\b0 \
+				[*]	
+\f1\b Device mapper support
+\f0\b0 \
+
+\f3\i 						Device-mapper is a low level volume manager.  It works by allowing\
+						people to specify mappings for ranges of logical sectors.  Various\
+						mapping types are available, in addition people may write their own\
+						modules containing custom mappings if they wish.\
+						Higher level volume managers such as LVM2 use this driver.[\'85]\
+						If unsure, say N.\
+
+\f0\i0 				[*]   
+\f1\b DM uevents
+\f0\b0 \
+
+\f3\i 						A target that intermittently fails I/O for debugging purposes.\
+
+\f0\i0 		[*] 	
+\f1\b Network device support  --->
+\f0\b0 \
+				[*]	
+\f1\b Ethernet driver support  --->
+\f0\b0 \
+						[*]	
+\f1\b Realtek devices
+\f0\b0 \
+
+\f3\i 								If you have a network (Ethernet) card belonging to this class, say Y.\
+								Note that the answer to this question doesn't directly affect the\
+								kernel: saying N will just cause the configurator to skip all\
+								the questions about Realtek devices. If you say Y, you will be asked for\
+								your specific card in the following questions.\
+
+\f0\i0 						[*]	
+\f1\b Realtek 8169 gigabit ethernet support
+\f0\b0 \
+
+\f3\i 								Say Y here if you have a Realtek 8169 PCI Gigabit Ethernet adapter.\
+
+\f0\i0 			Character devices  --->\
+				[*] 
+\f1\b Enable TTY
+\f0\b0 \
+
+\f3\i 						Allows you to remove TTY support which can save space, and\
+						blocks features that require TTY from inclusion in the kernel.\
+						TTY is required for any text terminals or serial port\
+						communication. Most users should leave this enabled.\
+
+\f0\i0 				[*]	
+\f1\b Unix98 PTY support
+\f0\b0 \
+
+\f3\i 						A pseudo terminal (PTY) is a software device consisting of two\
+						halves: a master and a slave. The slave device behaves identical to\
+						a physical terminal; the master device is used by a process to\
+						read data from and write data to the slave, thereby emulating a\
+						terminal. Typical programs for the master side are telnet servers\
+						and xterms.\
+						Linux has traditionally used the BSD-like names /dev/ptyxx for\
+						masters and /dev/ttyxx for slaves of pseudo terminals. This scheme\
+						has a number of problems. The GNU C library glibc 2.1 and later,\
+						however, supports the Unix98 naming standard: in order to acquire a\
+						pseudo terminal, a process opens /dev/ptmx; the number of the pseudo\
+						terminal is then made available to the process and the pseudo\
+						terminal slave can be accessed as /dev/pts/<number>. What was\
+						traditionally /dev/ttyp2 will then be /dev/pts/2, for example.\
+						All modern Linux systems use the Unix98 ptys.  Say Y unless\
+						you're on an embedded system and want to conserve memory.\
+
+\f0\i0 					Serial drivers  --->\
+						[*]	
+\f1\b 8250/16550 and compatible serial support
+\f0\b0 \
+
+\f3\i 								This selects whether you want to include the driver for the standard\
+								serial ports.  The standard answer is Y.  People who might say N\
+								here are those that are setting up dedicated Ethernet WWW/FTP\
+								servers, or users that have one of the various bus mice instead of a\
+								serial mouse and don't intend to use their machine's standard serial\
+								port for anything.  (Note that the Cyclades multi serial port driver\
+								does not need this driver built in for it to work.) [\'85]\
+								Most people will say Y or M here, so that they can use serial mice,\
+								modems and similar devices connecting to the standard serial ports.\
+
+\f0\i0 						[*]	
+\f1\b Console on 8250/16550 and compatible serial port
+\f0\b0 \
+
+\f3\i 								If you say Y here, it will be possible to use a serial port as the\
+								system console (the system console is the device which receives all\
+								kernel messages and warnings and which allows logins in single user\
+								mode). This could be useful if some terminal or printer is connected\
+								to that serial port.\
+								Even if you say Y here, the currently visible virtual console\
+								(/dev/tty0) will still be used as the system console by default, but\
+								you can alter that using a kernel command line option such as\
+								"console=ttyS1". (Try "man bootparam" or see the documentation of\
+								your boot loader (grub or lilo or loadlin) about how to pass options\
+								to the kernel at boot time.)[\'85] If unsure, say N.\
+
+\f0\i0 						
+\f1\b (32)  Maximum number of 8250/16550 serial ports\
+						(4)   Number of 8250/16550 serial ports to register at runtime
+\f0\b0 \
+		[*]	
+\f1\b USB support  --->
+\f0\b0 \
+				[*]	
+\f1\b Support for Host-side USB\
+
+\f2\i 						
+\f3\b0 Universal Serial Bus (USB) is a specification for a serial bus\
+						subsystem which offers higher speeds and more features than the\
+						traditional PC serial port.  The bus supplies power to peripherals\
+						and allows for hot swapping.  Up to 127 USB peripherals can be\
+						connected to a single USB host in a tree structure.\
+						The USB host is the root of the tree, the peripherals are the\
+						leaves and the inner nodes are special USB devices called hubs.\
+						Most PCs now have USB host ports, used to connect peripherals\
+						such as scanners, keyboards, mice, modems, cameras, disks,\
+						flash memory, network links, and printers to the PC.\
+						Say Y here if your computer has a host-side USB port and you want\
+						to use USB devices.  You then need to say Y to at least one of the\
+						Host Controller Driver (HCD) options below.  Choose a USB 1.1\
+						controller, such as "UHCI HCD support" or "OHCI HCD support",\
+						and "EHCI HCD (USB 2.0) support" except for older systems that\
+						do not have USB 2.0 support.  It doesn't normally hurt to select						them all if you are not certain. [\'85]\
+
+\f0\i0 				[*]	
+\f1\b EHCI HCD (USB 2.0) support
+\f0\b0 \
+
+\f3\i 						The Enhanced Host Controller Interface (EHCI) is standard for USB 2.0\
+						"high speed" (480 Mbit/sec, 60 Mbyte/sec) host controller hardware.\
+						If your USB host controller supports USB 2.0, you will likely want to\
+						configure this Host Controller Driver.\
+						EHCI controllers are packaged with "companion" host controllers (OHCI\
+						or UHCI) to handle USB 1.1 devices connected to root hub ports.  Ports\
+						will connect to EHCI if the device is high speed, otherwise they\
+						connect to a companion controller.  If you configure EHCI, you should\
+						probably configure the OHCI (for NEC and some other vendors) USB Host\
+						Controller Driver or UHCI (for Via motherboards) Host Controller\
+						Driver too. [\'85]\
+
+\f0\i0 				[*]	
+\f1\b OHCI HCD (USB 1.1) support
+\f0\b0 \
+
+\f3\i 						The Open Host Controller Interface (OHCI) is a standard for accessing\
+						USB 1.1 host controller hardware.  It does more in hardware than Intel's\
+						UHCI specification.  If your USB host controller follows the OHCI spec,\
+						say Y.  On most non-x86 systems, and on x86 hardware that's not using a\
+						USB controller from Intel or VIA, this is appropriate.  If your host\
+						controller doesn't use PCI, this is probably appropriate.  For a PCI\
+						based system where you're not sure, the "lspci -v" entry will list the\
+						right "prog-if" for your USB controller(s):  EHCI, OHCI, or UHCI. [\'85]\
+
+\f0\i0 				[*]	
+\f1\b USB Mass Storage support
+\f0\b0 \
+
+\f3\i 						Say Y here if you want to connect USB mass storage devices to your\
+						computer's USB port. This is the driver you need for USB\
+						floppy drives, USB hard disks, USB tape drives, USB CD-ROMs,\
+						USB flash devices, and memory sticks, along with\
+						similar devices. This driver may also be used for some cameras\
+						and card readers.\
+						This option depends on 'SCSI' support being enabled, but you\
+						probably also need 'SCSI device support: SCSI disk support'\
+						(BLK_DEV_SD) for most USB storage devices.[\'85]\
+
+\f0\i0 	File systems  --->\
+
+\f1\b 			[*]	The Extended 4 (ext4) filesystem\
+
+\f2\i 					
+\f3\b0 This is the next generation of the ext3 filesystem.\
+					Unlike the change from ext2 filesystem to ext3 filesystem,\
+					the on-disk format of ext4 is not forwards compatible with\
+					ext3; it is based on extent maps and it supports 48-bit\
+					physical block numbers.  The ext4 filesystem also supports delayed\
+					allocation, persistent preallocation, high resolution time stamps,\
+					and a number of other features to improve performance and speed\
+					up fsck time. [\'85]\
+					The ext4 filesystem supports mounting an ext3 filesystem; while there\
+					are some performance gains from the delayed allocation and inode\
+					table readahead, the best performance gains require enabling ext4\
+					features in the filesystem using tune2fs, or formatting a new\
+					filesystem as an ext4 filesystem initially. Without explicit enabling\
+					of ext4 features, the on disk filesystem format stays fully backward\
+					compatible.
+\f2\b \
+
+\f1\i0 			[*]	 Use ext4 for ext2 file systems\
+
+\f2\i 					
+\f3\b0 Allow the ext4 file system driver code to be used for ext2\
+					file system mounts.  This allows users to reduce their\
+					compiled kernel size by using one file system driver for\
+					ext2, ext3, and ext4 file systems.
+\f2\b \
+
+\f0\i0\b0 			
+\f1\b [*]	Enable POSIX file locking API
+\f0\b0 \
+
+\f3\i 					This option enables standard file locking support, required\
+					for filesystems like NFS and for the flock() system\
+					call. Disabling this option saves about 11k.\
+
+\f0\i0 			
+\f1\b [*]	Inotify support for userspace
+\f0\b0 \
+
+\f3\i 					Say Y here to enable inotify support for userspace, including the\
+					associated system calls.  Inotify allows monitoring of both files and\
+					directories via a single open fd.  Events are read from the file\
+					descriptor, which is also select()- and poll()-able.\
+					Inotify fixes numerous shortcomings in dnotify and introduces several\
+					new features including multiple file events, one-shot support, and\
+					unmount notification. [\'85] If unsure, say Y.\
+
+\f0\i0 				Pseudo filesystems  --->\
+					
+\f1\b [*]	/proc file system support
+\f0\b0 \
+
+\f3\i 							This is a virtual file system providing information about the status\
+							of the system. "Virtual" means that it doesn't take up any space on\
+							your hard disk: the files are created on the fly by the kernel when\
+							you try to access them. Also, you cannot read the files with older\
+							version of the program less: you need to use more or cat.\
+							It's totally cool; for example, "cat /proc/interrupts" gives\
+							information about what the different IRQs are used for at the moment\
+							(there is a small number of Interrupt ReQuest lines in your computer\
+							that are used by the attached devices to gain the CPU's attention --\
+							often a source of trouble if two devices are mistakenly configured\
+							to use the same IRQ). The program procinfo to display some\
+							information about your system gathered from the /proc file system.\
+							Before you can use the /proc file system, it has to be mounted,\
+							meaning it has to be given a location in the directory hierarchy.\
+							That location should be /proc. A command such as "mount -t proc proc\
+							/proc" or the equivalent line in /etc/fstab does the job. [\'85]\
+							This option will enlarge your kernel by about 67 KB. Several\
+							programs depend on this, so everyone should say Y here.\
+
+\f0\i0 					
+\f1\b [*]	sysfs file system support
+\f0\b0 \
+
+\f3\i 							The sysfs filesystem is a virtual filesystem that the kernel uses to\
+							export internal kernel objects, their attributes, and their\
+							relationships to one another.\
+							Users can use sysfs to ascertain useful information about the running\
+							kernel, such as the devices the kernel has discovered on each bus and\
+							which driver each is bound to. sysfs can also be used to tune devices\
+							and other kernel subsystems.\
+							Some system agents rely on the information in sysfs to operate.\
+							/sbin/hotplug uses device and object attributes in sysfs to assist in\
+							delegating policy decisions, like persistently naming devices.\
+							sysfs is currently used by the block subsystem to mount the root\
+							partition.  If sysfs is disabled you must specify the boot device on\
+							the kernel boot command line via its major and minor numbers.  For\
+							example, "root=03:01" for /dev/hda1.\
+							Designers of embedded systems may wish to say N here to conserve space.\
+
+\f0\i0 					
+\f1\b [*]	Tmpfs virtual memory file system support (former shm fs)
+\f0\b0 \
+
+\f3\i 							Tmpfs is a file system which keeps all files in virtual memory.\
+							Everything in tmpfs is temporary in the sense that no files will be\
+							created on your hard drive. The files live in memory and swap\
+							space. If you unmount a tmpfs instance, everything stored therein is							lost.\
+
+\f0\i0 				-*- 
+\f1\b Native language support  --->
+\f0\b0 \
+					
+\f1\b (utf8) Default NLS Option
+\f0\b0 \
+
+\f3\i 							The default NLS used when mounting file system. Note, that this is\
+							the NLS used by your console, not the NLS used by a specific file\
+							system (if different) to store data (filenames) on a disk.\
+
+\f0\i0 	Kernel hacking  --->\
+			printk and dmesg options  --->\
+				
+\f1\b (4)	Default message log level (1-7)
+\f0\b0 \
+
+\f3\i 					Default log level for printk statements with no specified priority.\
+					This was hard-coded to KERN_WARNING since at least 2.6.10 but folks\
+					that are auditing their logs closely may want to set it to a lower\
+					priority.\
+
+\f0\i0 			Compile-time checks and compiler options  --->\
+				
+\f1\b (2048) Warn for stack frames larger than (needs gcc 4.4)
+\f0\b0 \
+
+\f3\i 					Tell gcc to warn at build time for stack frames larger than this.\
+					Setting this too low will cause a lot of warnings.\
+					Setting it to 0 disables the warning.\
+					Requires gcc 4.4\
+
+\f0\i0 		-*-	
+\f1\b Kernel debugging
+\f0\b0 \
+
+\f3\i 				Say Y here if you are developing drivers or trying to debug and\
+				identify kernel problems.\
+
+\f0\i0 		
+\f1\b (0)	panic timeout
+\f0\b0 \
+
+\f3\i 				Set the timeout value (in seconds) until a reboot occurs when the\
+				the kernel panics. If n = 0, then we wait forever. A timeout\
+				value n > 0 will wait n seconds before rebooting, while a timeout\
+				value n < 0 will reboot immediately.\
+
+\f0\i0 			
+\f1\b IO delay type (port 0x80 based port-IO delay [recommended])  --->
+\f0\b0 \
+
+\f3\i 				This is the traditional Linux IO delay used for in/out_p.\
+				It is the most tested hence safest selection here.\
+
+\f0\i0 	Security options  --->\
+			
+\f1\b Default security module (Unix Discretionary Access Controls)
+\f0\b0   --->\
+
+\f3\i 				Select the security module that will be used by default if the\
+				kernel parameter security= is not specified.\
+
+\f0\i0 -*- 	Cryptographic API  --->\
+		
+\f1\b -*-   CRC32c CRC algorithm
+\f0\b0 \
+
+\f3\i 				Castagnoli, et al Cyclic Redundancy-Check Algorithm.  Used\
+				by iSCSI for header and data digests and by others.\
+				See Castagnoli93.  Module will be crc32c.\
+
+\f0\i0 		
+\f1\b -*-   AES cipher algorithms
+\f0\b0 \
+
+\f3\i 				AES cipher algorithms (FIPS-197). AES uses the Rijndael\
+				algorithm.\
+				Rijndael appears to be consistently a very good performer in\
+				both hardware and software across a wide range of computing\
+				environments regardless of its use in feedback or non-feedback\
+				modes. Its key setup time is excellent, and its key agility is\
+				good. Rijndael's very low memory requirements make it very well\
+				suited for restricted-space environments, in which it also\
+				demonstrates excellent performance. Rijndael's operations are\
+				among the easiest to defend against power and timing attacks.\
+				The AES specifies three key sizes: 128, 192 and 256 bits\
+
+\f0\i0 	Library routines  --->\
+		
+\f1\b -*- CRC16 functions
+\f0\b0 \
+
+\f3\i 				This option is provided for the case where no in-kernel-tree\
+				modules require CRC16 functions, but a module built outside\
+				the kernel tree does. Such modules that use library CRC16\
+				functions require M here.\
+
+\f0\i0 		
+\f1\b -*- CRC32/CRC32c functions
+\f0\b0 \
+
+\f3\i 				This option is provided for the case where no in-kernel-tree\
+				modules require CRC32/CRC32c functions, but a module built outside\
+				the kernel tree does. Such modules that use library CRC32/CRC32c\
+				functions require M here.\
+
+\f0\i0 			
+\f1\b CRC32 implementation (Slice by 8 bytes)  --->\
+
+\f2\i 				
+\f3\b0 Calculate checksum 8 bytes at a time with a clever slicing algorithm.\
+				This is the fastest algorithm, but comes with a 8KiB lookup table.\
+				Most modern processors have enough cache to hold this table without\
+				thrashing the cache.\
+				This is the default implementation choice.  Choose this one unless\
+				you have a good reason not to.}
