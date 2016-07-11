@@ -417,7 +417,7 @@ build_kernel() {
     # Checkout a branch version
     ${GIT} checkout v${KERNEL_VERSION}
   else
-    KERNEL_NAME=linux-${KERNEL_VERSION}
+    KERNEL_NAME=linux-${KERNEL_VERSION%.0}
     KERNEL_TAR=${KERNEL_NAME}.tar
     
     if [ -n "${KERNEL_PATH}" ]; then
