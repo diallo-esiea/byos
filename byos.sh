@@ -140,7 +140,7 @@ parse_command_line() {
         ;;
   
       -i=*|--git=*)
-        GIT_PATCH="${i#*=}"
+        GIT_PATH="${i#*=}"
         shift
         ;;
   
