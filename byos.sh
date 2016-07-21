@@ -71,7 +71,7 @@ USAGE="$(basename "${0}") [options] <COMMAND> DEVICE CONFIG VERSION\n\n
 \t\t-a=ALT, --alt=ALT\tAlternative Configuration (config, menuconfig, oldconfig, defconf, alldefconfig, allnoconfig,...)\n
 \t\t-d, --deb\t\tCreate Debian package archive\n
 \t\t-g=PATCH, --grsec=PATCH\tGrsecurity patch\n
-\t\t-i=PATCH, --git=PATCH\tGit path to get the kernel archive\n
+\t\t-i=PATH, --git=PATH\tGit path to get the kernel archive\n
 \t\t-l=PATH, --local=PATH\tPath to get the kernel archive (instead of official Linux Kernel Archives URL)\n
 \t\t-n, --nodelete\t\tKeep temporary files\n
 \t\t-t=PATH, --temp=PATH\tTemporary folder (default=${TMP_PATH})\n\n
