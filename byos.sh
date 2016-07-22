@@ -152,6 +152,7 @@ parse_command_line() {
   
       -n|--nodelete)
         NO_DELETE=1
+        shift
         ;;
   
       -p=*|--path=*)
