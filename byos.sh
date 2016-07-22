@@ -114,6 +114,7 @@ parse_command_line() {
   
       -d|--deb)
         DEB=1
+        shift
         ;;
   
       -f=*|--file=*)
