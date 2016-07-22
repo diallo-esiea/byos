@@ -1,0 +1,171 @@
+﻿Adduser			    add and remove users and groups
+apt			    commandline package manager
+base-files		    Debian base system miscellaneous files
+base-passwd		    Debian base system master password and group files
+bash			    GNU Bourne Again SHell
+bridge-utils		    Utilities for configuring the Linux Ethernet bridge
+bsdutils		    basic utilities from 4.4BSD-Lite
+coreutils		    GNU core utilities
+cpio			    GNU cpio -- a program to manage archives of files
+dash			    POSIX-compliant shell
+debconf			    Debian configuration management system
+debian-archive-keyring	    GnuPG archive keys of the Debian archive
+debianutils		    Miscellaneous utilities specific to Debian
+debootstrap		    Bootstrap a basic Debian system
+dh-python		    Debian helper tools for packaging Python libraries and applications
+diffutils 		    File comparison utilities
+dmsetup			    Linux Kernel Device Mapper userspace library
+dpkg			    Debian package management system
+e2fslibs		    ext2/ext3/ext4 file system libraries
+e2fsprogs		    ext2/ext3/ext4 file system utilities
+findutils		    utilities for finding files--find, xargs
+gcc-4.9-base		    GCC, the GNU Compiler Collection (base package)
+gcc-5-base		    GCC, the GNU Compiler Collection (base package)
+gcc-6-base		    GCC, the GNU Compiler Collection (base package)
+gettext-base		    GNU Internationalization utilities for the base system
+gnupg                       GNU privacy guard - a free PGP replacement
+gpgv                        GNU privacy guard - signature verification tool
+grep                        GNU grep, egrep and fgrep
+grub-common                 GRand Unified Bootloader (common files)
+grub-pc                     GRand Unified Bootloader, version 2 (PC/BIOS version)
+grub-pc-bin                 GRand Unified Bootloader, version 2 (PC/BIOS binaries)
+grub2                       GRand Unified Bootloader, version 2 (dummy package)
+grub2-common                GRand Unified Bootloader (common files for version 2)
+gzip                        GNU compression utilities
+hostname                    utility to set/show the host name or domain name
+init-system-helpers         helper tools for all init systems
+initramfs-tools             generic modular initramfs generator (automation)
+initramfs-tools-core        generic modular initramfs generator (core tools)
+initscripts                 scripts for initializing and shutting down the system
+insserv                     boot sequence organizer using LSB init.d script dependency information
+iproute2                    networking and traffic control tools
+isc-dhcp-client             DHCP client for automatically obtaining an IP address
+klibc-utils                 small utilities built with klibc for early boot
+kmod                        tools for managing Linux kernel modules
+libacl1                     Access control list shared library
+libapparmor1                changehat AppArmor library
+libapt-pkg5.0               package management runtime library
+libattr1                    Extended attribute shared library
+libaudit-common             Dynamic library for security auditing - common files
+libaudit1                   Dynamic library for security auditing
+libblkid1                   block device ID library
+libbsd0                     utility functions from BSD systems - shared library
+libbz2-1.0                  high-quality block-sorting file compressor library - runtime
+libc-bin                    GNU C Library: Binaries
+libc-l10n                   GNU C Library: localization files
+libc6                       GNU C Library: Shared libraries
+libcap2                     POSIX 1003.1e capabilities (library)
+libcap2-bin                 POSIX 1003.1e capabilities (utilities)
+libcgmanager0               Central cgroup manager daemon (client library)
+libcomerr2                  common error description library
+libcryptsetup4              disk encryption support - shared library
+libdb5.3                    Berkeley v5.3 Database Libraries [runtime]
+libdbus-1-3                 simple interprocess messaging system (library)
+libdebconfclient0           Debian Configuration Management System (C-implementation library)
+libdevmapper1.02.1          Linux Kernel Device Mapper userspace library
+libdns-export162            Exported DNS Shared Library
+libedit2                    BSD editline and history libraries
+libexpat1                   XML parsing C library - runtime library
+libfdisk1                   fdisk partitioning library
+libffi6                     Foreign Function Interface library runtime
+libfreetype6                FreeType 2 font engine, shared library files
+libfuse2                    Filesystem in Userspace (library)
+libgcc1                     GCC support library
+libgcrypt20                 LGPL Crypto library - runtime library
+libgmp10                    Multiprecision arithmetic library
+libgnutls30                 GNU TLS library - main runtime library
+libgpg-error0               library for common error values and messages in GnuPG components
+libgpm2                     General Purpose Mouse - shared library
+libgssapi-krb5-2            MIT Kerberos runtime libraries - krb5 GSS-API Mechanism
+libhogweed4                 low level cryptographic library (public-key cryptos)
+libicu55                    International Components for Unicode
+libidn11                    GNU Libidn library, implementation of IETF IDN specifications
+libisc-export160            Exported ISC Shared Library
+libk5crypto3                MIT Kerberos runtime libraries - Crypto Library
+libkeyutils1                Linux Key Management Utilities (library)
+libklibc                    minimal libc subset for use with initramfs
+libkmod2                    libkmod shared library
+libkrb5-3                   MIT Kerberos runtime libraries
+libkrb5support0             MIT Kerberos runtime libraries - Support library
+liblxc1                     Linux Containers userspace tools (library)
+liblz4-1                    Fast LZ compression algorithm library - runtime
+liblzma5                    XZ-format compression library
+libmount1                   device mounting library
+libmpdec2                   library for decimal floating point arithmetic (runtime library)
+libncurses5                 shared libraries for terminal handling
+libncursesw5                shared libraries for terminal handling (wide character support)
+libnettle6                  low level cryptographic library (symmetric and one-way cryptos)
+libnih-dbus1                NIH D-Bus Bindings Library
+libnih1                     NIH Utility Library
+libp11-kit0                 Library for loading and coordinating access to PKCS#11 modules - runtime
+libpam-modules              Pluggable Authentication Modules for PAM
+libpam-modules-bin          Pluggable Authentication Modules for PAM - helper binaries
+libpam-runtime              Runtime support for the PAM library
+libpam0g                    Pluggable Authentication Modules library
+libpcre3                    Perl 5 Compatible Regular Expression Library - runtime files
+libpng16-16                 PNG library - runtime (version 1.6)
+libpopt0                    lib for parsing cmdline parameters
+libprocps5                  library for accessing process information from /proc
+libpsl0                     Library for Public Suffix List (shared libraries)
+libpython3-stdlib           interactive high-level object-oriented language (default python3 version)
+libpython3.5-minimal        Minimal subset of the Python language (version 3.5)
+libpython3.5-stdlib         Interactive high-level object-oriented language (standard library, version 3.5)
+libreadline6                GNU readline and history libraries, run-time libraries
+libseccomp2                 high level interface to Linux seccomp filter
+libselinux1                 SELinux runtime shared libraries
+libsemanage-common          Common files for SELinux policy management libraries
+libsemanage1                SELinux policy management library
+libsepol1                   SELinux library for manipulating binary security policies
+libsmartcols1               smart column output alignment library
+libsqlite3-0                SQLite 3 shared library
+libss2                      command-line interface parsing library
+libssl1.0.2                 Secure Sockets Layer toolkit - shared libraries
+libstdc++6                  GNU Standard C++ Library v3
+libsystemd0                 systemd utility library
+libtasn1-6                  Manage ASN.1 structures (runtime)
+libtinfo5                   shared low-level terminfo library for terminal handling
+libudev1                    libudev shared library
+libusb-0.1-4                userspace USB programming library
+libustr-1.0-1               Micro string library: shared library
+libuuid1                    Universally Unique ID library
+libwrap0                    Wietse Venema's TCP wrappers library
+linux-base                  Linux image base package
+locales                     GNU C Library: National Language (locale) data [support]
+login                       system login tools
+lsb-base                    Linux Standard Base init script functionality
+lxc                         Linux Containers userspace tools
+mawk                        a pattern scanning and text processing language
+mime-support                MIME files 'mime.types' & 'mailcap', and support programs
+mount                       tools for mounting and manipulating filesystems
+multiarch-support           Transitional package to ensure multiarch compatibility
+ncurses-base                basic terminal type definitions
+ncurses-bin                 terminal-related programs and man pages
+openssh-client              secure shell (SSH) client, for secure access to remote machines
+openssh-server              secure shell (SSH) server, for secure access from remote machines
+openssh-sftp-server         secure shell (SSH) sftp server module, for SFTP access from remote machines
+passwd                      change and administer password and group data
+perl-base                   minimal Perl system
+procps                      /proc file system utilities
+python3                     interactive high-level object-oriented language (default python3 version)
+python3-minimal             minimal subset of the Python language (default python3 version)
+python3.5                   Interactive high-level object-oriented language (version 3.5)
+python3.5-minimal           Minimal subset of the Python language (version 3.5)
+readline-common             GNU readline and history libraries, common files
+rsync                       fast, versatile, remote (and local) file-copying tool
+sed                         The GNU sed stream editor
+sensible-utils              Utilities for sensible alternative selection
+startpar                    run processes in parallel and multiplex their output
+systemd                     system and service manager
+systemd-sysv                system and service manager - SysV links
+sysv-rc                     System-V-like runlevel change mechanism
+sysvinit-utils              System-V-like utilities
+tar                         GNU version of the tar archiving utility
+tzdata                      time zone and daylight-saving time data
+ucf                         Update Configuration File(s): preserve user changes to config files
+udev                        /dev/ and hotplug management daemon
+util-linux                  miscellaneous system utilities
+vim                         Vi IMproved - enhanced vi editor
+vim-common                  Vi IMproved - Common files
+vim-runtime                 Vi IMproved - Runtime files
+wget                        retrieves files from the web
+zlib1g                      compression library - runtime
