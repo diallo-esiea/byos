@@ -8,10 +8,10 @@ Configuring your own system requires knowing what you want.
 
 ## Usage
 
-Build a whole system with a Debian (based on debian.conf configuration) and Kernel (3.16.0 based on configuration file config-3.16.0, 4.3.5 based on config-4.3.5)
+Build a whole system with a Debian (based on debian.conf configuration) and longterm Kernel (4.4.24 based on configuration file config-4.4.24) or stable Kernel (4.7.7 based on config-4.7.7)
 ```
-./byos.sh --file=config/debian.conf build [DEVICE] config/config-3.16.0 3.16.0
-./byos.sh --file=config/debian.conf build [DEVICE] config/config-4.3.5 4.3.5
+./byos.sh --file=config/debian.conf build [DEVICE] config/config-4.4.24 4.4.24
+./byos.sh --file=config/debian.conf build [DEVICE] config/config-4.7.7 4.7.7
 ```
 Update an existed whole system with new Kernel (4.3.5 based on configuration file config-4.3.5, Grsecurity based on Grsecurity configuration file config-4.3.5-grsec)
 ```
